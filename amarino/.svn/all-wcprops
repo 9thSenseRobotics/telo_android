@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 30
+/svn/!svn/ver/28/trunk/amarino
+END
+default.properties
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/27/trunk/amarino/default.properties
+END
+.classpath
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/svn/!svn/ver/1/trunk/amarino/.classpath
+END
+.project
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/!svn/ver/1/trunk/amarino/.project
+END
+AndroidManifest.xml
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/27/trunk/amarino/AndroidManifest.xml
+END
