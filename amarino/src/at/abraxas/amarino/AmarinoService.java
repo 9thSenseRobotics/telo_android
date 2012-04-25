@@ -714,7 +714,8 @@ public class AmarinoService extends Service {
 
 				Intent intent2 = new Intent(AmarinoIntent.ACTION_SEND);
 				intent2.setClass(context, AmarinoService.class);
-				intent2.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, "00:06:66:06:9A:9E");
+				//intent2.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, "00:06:66:06:9A:9E");
+				intent2.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, "00:06:66:46:5B:72");
 				intent2.putExtra(AmarinoIntent.EXTRA_DATA_TYPE, AmarinoIntent.INT_EXTRA);
 				//intent2.putExtra(AmarinoIntent.EXTRA_FLAG, 'r');
 				intent2.putExtra(AmarinoIntent.EXTRA_FLAG, cmdChar);
