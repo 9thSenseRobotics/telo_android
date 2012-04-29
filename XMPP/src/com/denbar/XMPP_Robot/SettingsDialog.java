@@ -1,14 +1,15 @@
-package org.apache.android.xmpp;
+package com.denbar.XMPP_Robot;
+
+import org.jivesoftware.smack.ConnectionConfiguration;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Presence;
 
 import android.app.Dialog;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import org.jivesoftware.smack.ConnectionConfiguration;
-import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.packet.Presence;
 
 /**
  * Gather the xmpp settings and create an XMPPConnection
@@ -33,7 +34,7 @@ public class SettingsDialog extends Dialog implements android.view.View.OnClickL
         host = "9thsense.com";
         port = "5222";
         service = "9thsense.com";
-        username = "litebot";
+        username = "droidbot";
         password = "9thsense";
 
         /*

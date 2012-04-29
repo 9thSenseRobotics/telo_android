@@ -1,17 +1,6 @@
-package org.apache.android.xmpp;
+package com.denbar.XMPP_Robot;
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.os.Handler;
-import android.util.Log;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.Toast;
+import java.util.ArrayList;
 
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPConnection;
@@ -21,7 +10,21 @@ import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.util.StringUtils;
 
-import java.util.ArrayList;
+import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.Toast;
+import at.abraxas.amarino.AmarinoIntent;
 
 public class XMPPClient extends Activity {
 
@@ -33,6 +36,7 @@ public class XMPPClient extends Activity {
     private EditText mSendText;
     private ListView mList;
     private XMPPConnection connection;
+    private ArduinoReceiver arduinoReceiver;
 
     /**
      * Called with the activity is first created.
@@ -42,6 +46,12 @@ public class XMPPClient extends Activity {
         super.onCreate(icicle);
         Log.i("XMPPClient", "onCreate called");
         setContentView(R.layout.main);
+
+        arduinoReceiver = new ArduinoReceiver();
+
+        String default_recipient = "controller@9thsense.com";
+
+        setText(R.id.recipient, default_recipient);
 
         mRecipient = (EditText) this.findViewById(R.id.recipient);
         Log.i("XMPPClient", "mRecipient = " + mRecipient);
@@ -82,20 +92,40 @@ public class XMPPClient extends Activity {
             public void onClick(View view) {
                 String to = mRecipient.getText().toString();
                 String text = mSendText.getText().toString();
-
+                sendDataToServer(text);
+                /*
                 Log.i("XMPPClient", "Sending text [" + text + "] to [" + to + "]");
+
                 Message msg = new Message(to, Message.Type.chat);
                 msg.setBody(text);
                 connection.sendPacket(msg);
                 messages.add(connection.getUser() + ":");
                 messages.add(text);
                 setListAdapter();
+                */
             }
         });
     }
 
+	@Override
+	protected void onStart() {
+		super.onStart();
+		// in order to receive broadcasted intents we need to register our receiver
+		registerReceiver(arduinoReceiver, new IntentFilter(AmarinoIntent.ACTION_RECEIVED));
+	}
+
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+
+		// do never forget to unregister a registered receiver
+		unregisterReceiver(arduinoReceiver);
+	}
+
+
     /**
-     * Called by Settings dialog when a connection is establised with the XMPP server
+     * Called by Settings dialog when a connection is established with the XMPP server
      *
      * @param connection
      */
@@ -142,19 +172,53 @@ public class XMPPClient extends Activity {
 		Intent BroadcastIntent = new Intent(ROBOT_COMMAND_INTENT);
 		BroadcastIntent.putExtra("robotCommand", RobotCommand);
 		this.sendBroadcast(BroadcastIntent);
-		//context.sendBroadcast(BroadcastIntent);
         Toast.makeText(this, RobotCommand, Toast.LENGTH_SHORT).show();
-
-        // also fire an intent that will send the data through bluetooth
-		/*
-		char cmdChar = RobotCommand.charAt(0);
-		Intent intent2 = new Intent(AmarinoIntent.ACTION_SEND);
-		intent2.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, "00:06:66:06:9A:9E");
-		intent2.putExtra(AmarinoIntent.EXTRA_DATA_TYPE, AmarinoIntent.INT_EXTRA);
-		intent2.putExtra(AmarinoIntent.EXTRA_FLAG, 'r');
-
-		intent2.putExtra(AmarinoIntent.EXTRA_DATA, 0);
-
-		context.startService(intent2); */
 	}
+
+	void sendDataToServer(String data)
+	{
+	    String to = mRecipient.getText().toString();
+
+	    if (connection != null)
+	    {
+	    	Log.i("XMPPClient", "Sending text [" + data + "] to [" + to + "]");
+	    	Message msg = new Message(to, Message.Type.chat);
+	    	msg.setBody(data);
+	    	connection.sendPacket(msg);
+	    	messages.add(connection.getUser() + ":");
+	    	messages.add(data);
+	    	setListAdapter();
+	    }
+	}
+
+	public class ArduinoReceiver extends BroadcastReceiver {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String data = null;
+
+			// the device address from which the data was sent, we don't need it here but to demonstrate how you retrieve it
+			//final String address = intent.getStringExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS);
+
+			// the type of data which is added to the intent
+			final int dataType = intent.getIntExtra(AmarinoIntent.EXTRA_DATA_TYPE, -1);
+
+			// we only expect String data though, but it is better to check if really string was sent
+			// later Amarino will support differnt data types, so far data comes always as string and
+			// you have to parse the data to the type you have sent from Arduino, like it is shown below
+			if (dataType == AmarinoIntent.STRING_EXTRA){
+				data = intent.getStringExtra(AmarinoIntent.EXTRA_DATA);
+
+				if (data != null){
+					sendDataToServer(data);
+
+				}
+			}
+		}
+	}
+
+    private void setText(int id, String value) {
+        EditText widget = (EditText) this.findViewById(id);
+        widget.setText(value);
+    }
 }
