@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">XMPPClient</string>
+    <string name="robot_name">no_name</string>
+    <string name="host">9thsense.com</string>
+    <string name="port">5222</string>
+    <string name="service">9thsense.com</string>
+    <string name="userid">droidbot</string>
+    <string name="password">9thsense</string>
+    <string name="recipient">controller@9thsense.com</string>
 </resources>

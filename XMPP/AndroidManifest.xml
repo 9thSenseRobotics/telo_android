@@ -3,7 +3,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <application  android:name="com.denbar.XMPP_Robot.XMPPDemosApplication"
+    <application  android:name="com.denbar.XMPP_Robot.XMPPApplication"
             android:label="XMPP_Robot">
         <activity android:name="com.denbar.XMPP_Robot.XMPPClient" android:label="XMPPClient">
             <intent-filter>
@@ -11,5 +11,18 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <!--  callback for boot completed, note that you need the permission here as well
+        to know when boot is finished -->
+        <receiver
+            android:enabled="true"
+            android:name=".StartupIntentReceiver"
+            android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
+			<intent-filter>
+				<action
+				android:name="android.intent.action.BOOT_COMPLETED" />
+				<category android:name="android.intent.category.HOME" />
+			</intent-filter>
+		</receiver>
     </application>
 </manifest>
