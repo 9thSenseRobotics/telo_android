@@ -3,14 +3,21 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <application  android:name="com.denbar.XMPP_Robot.XMPPApplication"
+    <application  android:name=".XMPPApplication"
             android:label="XMPP_Robot">
-        <activity android:name="com.denbar.XMPP_Robot.XMPPClient" android:label="XMPPClient">
-            <intent-filter>
+        <activity android:name=".XMPPClient" android:label="XMPPClient">
+             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <service android:enabled = "true" android:name=".StartupService"
+             android:label="XMPP_StartupService">
+            <intent-filter>
+				<action	android:name="com.denbar.XMPP_Robot.StartupService" />
+		    </intent-filter>
+        </service>
 
         <!--  callback for boot completed, note that you need the permission here as well
         to know when boot is finished -->
@@ -19,10 +26,22 @@
             android:name=".StartupIntentReceiver"
             android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
 			<intent-filter>
-				<action
-				android:name="android.intent.action.BOOT_COMPLETED" />
+				<action	android:name="android.intent.action.BOOT_COMPLETED" />
 				<category android:name="android.intent.category.HOME" />
 			</intent-filter>
 		</receiver>
+
+        <receiver
+            android:enabled="true"
+            android:name=".AmarinoIntentReceiver">
+			<intent-filter>
+                <action android:name="amarino.intent.action.RECEIVED" />
+                <action android:name="amarino.intent.action.CONNECTION_FAILED" />
+                <action android:name="amarino.intent.action.CONNECTED" />
+                <action android:name="amarino.intent.action.DISCONNECTED" />
+                <action android:name="amarino.intent.action.ACTION_CONNECTED_DEVICES" />
+			</intent-filter>
+        </receiver>
+
     </application>
 </manifest>

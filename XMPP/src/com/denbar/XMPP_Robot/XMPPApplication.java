@@ -25,8 +25,8 @@ public class XMPPApplication extends Application {
     private static XMPPApplication singleton;
 
     // global variables
-    private String _robotName, _host, _port, _service, _userid, _password, _recipient, _packetString;
-    private boolean _packetFlag;
+    private String _robotName, _host, _port, _service, _userid, _password, _bluetooth, _recipient;
+    private boolean _bluetoothConnected;
     public static XMPPApplication getInstance()
     {
     		return singleton;
@@ -81,24 +81,14 @@ public class XMPPApplication extends Application {
     	return _recipient;
     }
 
-    public String getpacketString()
+    public boolean getBluetoothConnected()
     {
-    	return _packetString;
+    	return _bluetoothConnected;
     }
 
-    public void setpacketString(String value)
+    public void setBluetoothConnected(boolean value)
     {
-    	_packetString = value;
-    }
-
-    public boolean getpacketFlag()
-    {
-    	return _packetFlag;
-    }
-
-    public void setpacketFlag(boolean value)
-    {
-    	_packetFlag = value;
+    	_bluetoothConnected = value;
     }
 
     @Override
