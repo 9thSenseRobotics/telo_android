@@ -11,9 +11,6 @@ import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.util.StringUtils;
 
-import at.abraxas.amarino.Amarino;
-import at.abraxas.amarino.AmarinoIntent;
-
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -25,6 +22,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
+import at.abraxas.amarino.AmarinoIntent;
 
 /**
  * Service that attempts to register with XMPP server from 9th Sense
@@ -36,11 +34,10 @@ public class StartupService extends Service {
 	public static final String ROBOT_COMMAND_INTENT = "com.denbar.action.ROBOT_COMMMAND";
     private Handler mHandler = new Handler();
     private XMPPConnection connection;
-    private XMPPClient xmppClient;
     private String robotName, host, port, service, userid, password, bluetooth, recipient;
     private int portNumber;
     private boolean amarinoBluetoothConnected;
-	private long backoffTimeMs = 10000;
+
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -59,36 +56,13 @@ public class StartupService extends Service {
 
 
 	@Override
-	public void onStart(Intent intent, int startId) {
-
-		super.onStart(intent, startId);
-		String messageToXMPP_Server = intent.getStringExtra("message");
-		String robotCommandToAmarino = intent.getStringExtra("RobotCommand");
-		String BluetoothState = intent.getStringExtra("bluetooth");
-		if (messageToXMPP_Server != null) sendDataToServer(messageToXMPP_Server);
-		if (robotCommandToAmarino != null) sendDataToAmarino(robotCommandToAmarino);
-		if (BluetoothState != null) // we make this a string so we can test if this was sent or not
+	public int onStartCommand(Intent intent, int flags, int startId)
+	{
+		if ((flags & START_FLAG_RETRY) == 0)
 		{
-			if (BluetoothState.equals("true")) amarinoBluetoothConnected = true;
-			else
-			{
-				amarinoBluetoothConnected = false;
-				amarinoConnect();
-			}
+			Toast.makeText(this, "Recovering from abnormal shutdown.....", Toast.LENGTH_LONG).show();
 		}
-	}
 
-	@Override
-	public void onCreate() {
-		super.onCreate();
-		amarinoBluetoothConnected = false;
-        registerReceiver(connectionStateReceiver, new IntentFilter(AmarinoIntent.ACTION_CONNECTED));
-
-		Toast.makeText(this, "XMPP Service Created", Toast.LENGTH_SHORT).show();
-		Toast.makeText(this, "XMPP Service started, attempting registration...", Toast.LENGTH_SHORT).show();
-
-		// attempt a registration
-		Log.w("XMPP", "start registration process");
 
         Resources robotResources = getResources();
 
@@ -113,6 +87,38 @@ public class StartupService extends Service {
         	Intent XMPPClientIntent = new Intent(this, XMPPClient.class);
         	startActivity(XMPPClientIntent);
         }
+
+		if (intent != null)	// intent is null if it is system restart
+		{
+			String messageToXMPP_Server = intent.getStringExtra("message");
+			String robotCommandToAmarino = intent.getStringExtra("RobotCommand");
+			String BluetoothState = intent.getStringExtra("bluetooth");
+			if (messageToXMPP_Server != null) sendDataToServer(messageToXMPP_Server);
+			if (robotCommandToAmarino != null) sendDataToAmarino(robotCommandToAmarino);
+			if (BluetoothState != null) // we make this a string so we can test if this was sent or not
+			{
+				if (BluetoothState.equals("true")) amarinoBluetoothConnected = true;
+				else
+				{
+					amarinoBluetoothConnected = false;
+					amarinoConnect();
+				}
+			}
+		}
+		return Service.START_STICKY; // service will restart after being terminated by the runtime
+	}
+
+	@Override
+	public void onCreate() {
+		super.onCreate();
+		amarinoBluetoothConnected = false;
+        registerReceiver(connectionStateReceiver, new IntentFilter(AmarinoIntent.ACTION_CONNECTED));
+
+		Toast.makeText(this, "XMPP Service started, attempting log in...", Toast.LENGTH_SHORT).show();
+
+		// attempt a registration
+		Log.w("XMPP", "start log in process");
+
 
 	}
 
@@ -143,6 +149,9 @@ public class StartupService extends Service {
     // Create a connection to the XMPP server
     private void serverConnect()
     {
+        //if (connection != null) return; // already connected
+        // we need to find out how to detect if we lost the connection
+        // some kind of heartbeat
         ConnectionConfiguration connConfig = new ConnectionConfiguration(host, portNumber, service);
         	//new ConnectionConfiguration(host, portNumber); // service is optional
 
