@@ -15,7 +15,6 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -34,7 +33,7 @@ public class XMPPClient extends Activity {
     private EditText editRecipient, editSend, editMessages, editRobotName, editHost;
     private EditText editPort, editUserID, editService, editPassword;
     private String robotName, host, port, service, userid, password, recipient;
-    private XMPPClient xmppClient;
+    private int portNumber;
     private XMPPConnection connection;
     private ArduinoReceiver arduinoReceiver;
 
@@ -73,8 +72,7 @@ public class XMPPClient extends Activity {
         password = prefs.getString("password",robotResources.getString(R.string.password));
         recipient = prefs.getString("recipient",robotResources.getString(R.string.recipient));
 
-        // now set the global variables because the dialog type is not able to get shared preferences.
-        // So it will get the values as global variables.
+        // if we want global variables, this is how to set them
         // XMPPApplication.getInstance().setGlobalStrings(robotName,host, port, service, userid, password, recipient);
 
         // display the values for the user:
@@ -88,24 +86,36 @@ public class XMPPClient extends Activity {
         editMessages.setText("Received messages and status are displayed here");
         editSend.setText("Enter text here that you want to send");
 
-        // Set a button listener to update entries
+        // Set a button listener to update entries and to login
         Button setup = (Button) this.findViewById(R.id.OK);
         setup.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
+            	robotName = editRobotName.getText().toString();
+            	host = editHost.getText().toString();
+            	port = editPort.getText().toString();
+            	service = editService.getText().toString();
+            	userid = editUserID.getText().toString();
+            	password = editPassword.getText().toString();
+            	recipient = editRecipient.getText().toString();
+
                 SharedPreferences newprefs = getSharedPreferences("RobotPreferences", MODE_WORLD_WRITEABLE );
                 SharedPreferences.Editor editor = newprefs.edit();
-            	editor.putString("robotName", editRobotName.getText().toString());
-            	editor.putString("host", editHost.getText().toString());
-            	editor.putString("port", editPort.getText().toString());
-            	editor.putString("service", editService.getText().toString());
-            	editor.putString("userid", editUserID.getText().toString());
-            	editor.putString("password", editPassword.getText().toString());
-            	editor.putString("recipient", editRecipient.getText().toString());
+            	editor.putString("robotName",robotName);
+            	editor.putString("host", host);
+            	editor.putString("port", port);
+            	editor.putString("service", service);
+            	editor.putString("userid", userid);
+            	editor.putString("password", password);
+            	editor.putString("recipient", recipient);
             	editor.commit();
 
-            	editMessages.setText("Entries saved, connecting to server.");
-
-            	serverConnect();
+            	if (EntriesTest())
+            	{
+            		editSend.setText("");
+                	editMessages.setText("Entries saved, connecting to server.");
+            		serverConnect();
+            	}
+            	else editSend.setText("There is a error in at least one of the entries");
 
         		//Intent serviceIntent = new Intent();
         		//serviceIntent.setAction("com.denbar.XMPP_Robot.StartupService");
@@ -119,48 +129,40 @@ public class XMPPClient extends Activity {
 
     private void serverConnect()
     {
-    	int portNumber;
-    	try {
-    	    portNumber = Integer.parseInt(port);
-    	} catch(NumberFormatException nfe) {
-    		editMessages.setText("port number is not an integer, please fix!");
-    		return;
-    	}
+        ConnectionConfiguration connConfig = new ConnectionConfiguration(host, portNumber, service);
+        	//new ConnectionConfiguration(host, portNumber); // service is optional
 
-        ConnectionConfiguration connConfig =
-    	//new ConnectionConfiguration(host, portNumber, service);
-        new ConnectionConfiguration(host,portNumber); // service is optional
-    connConfig.setSASLAuthenticationEnabled(false);
-    //connConfig.setReconnectionAllowed(true);
-    XMPPConnection connection = new XMPPConnection(connConfig);
+        connConfig.setSASLAuthenticationEnabled(false);
+	    //connConfig.setReconnectionAllowed(true);
+	    XMPPConnection connection = new XMPPConnection(connConfig);
 
+	    try {
+	        connection.connect();
+	        Log.i("XMPPClient", "[SettingsDialog] Connected to " + connection.getHost());
+	    } catch (XMPPException ex) {
+	        Log.e("XMPPClient", "[SettingsDialog] Failed to connect to " + connection.getHost());
+	        Log.e("XMPPClient", ex.toString());
+	        setConnection(null);
+	        Toast.makeText(this, "XMPP Server connection failed", Toast.LENGTH_SHORT).show();
+	        return;
+	    }
+	    try {
+	        connection.login(userid,password);
+	        Log.i("XMPPClient", "Logged in as " + connection.getUser());
 
-    try {
-        connection.connect();
-        Log.i("XMPPClient", "[SettingsDialog] Connected to " + connection.getHost());
-    } catch (XMPPException ex) {
-        Log.e("XMPPClient", "[SettingsDialog] Failed to connect to " + connection.getHost());
-        Log.e("XMPPClient", ex.toString());
-        setConnection(null);
-        Toast.makeText(this, "XMPP Server connection failed", Toast.LENGTH_SHORT).show();
-    }
-    try {
-        connection.login(userid,password);
-        Log.i("XMPPClient", "Logged in as " + connection.getUser());
-
-        // Set the status to available
-        Presence presence = new Presence(Presence.Type.available);
-        connection.sendPacket(presence);
-        editMessages.setText("Logged in to server");
-        setConnection(connection);
-        //Toast.makeText(this, "XMPP Log in successful", Toast.LENGTH_SHORT).show();
-    } catch (XMPPException ex) {
-        Log.e("XMPPClient", "[SettingsDialog] Failed to log in as " + userid);
-        Log.e("XMPPClient", ex.toString());
-        setConnection(null);
-        editMessages.setText("Log in to server failed");
-        Toast.makeText(this, "XMPP Log in failed", Toast.LENGTH_SHORT).show();
-    }
+	        // Set the status to available
+	        Presence presence = new Presence(Presence.Type.available);
+	        connection.sendPacket(presence);
+	        editMessages.setText("Logged in to server");
+	        setConnection(connection);
+	        //Toast.makeText(this, "XMPP Log in successful", Toast.LENGTH_SHORT).show();
+	    } catch (XMPPException ex) {
+	        Log.e("XMPPClient", "[SettingsDialog] Failed to log in as " + userid);
+	        Log.e("XMPPClient", ex.toString());
+	        setConnection(null);
+	        editMessages.setText("Log in to server failed");
+	        Toast.makeText(this, "XMPP Log in failed", Toast.LENGTH_SHORT).show();
+	    }
 
 
         // Set a button listener to send a chat text message
@@ -188,6 +190,43 @@ public class XMPPClient extends Activity {
 	    {
 	    	editMessages.setText("failed to send, no connection set");
 	    }
+	}
+
+	boolean EntriesTest()
+	{
+    	try {
+    	    portNumber = Integer.parseInt(port);
+    	} catch(NumberFormatException nfe) {
+    		editMessages.setText("port number is not an integer");
+            setConnection(null);
+    		return false;
+    	}
+
+    	if ( (!recipient.contains("@")) || (!recipient.contains(".")))
+    	{
+    		editMessages.setText("Recipient does not have a valid address");
+    		return false;
+    	}
+
+    	if ( !host.contains("."))
+    	{
+    		editMessages.setText("host does not have a valid address");
+    		return false;
+    	}
+
+    	if ( !service.contains("."))
+    	{
+    		editMessages.setText("service does not have a valid address");
+    		return false;
+    	}
+
+    	if ( userid.contains("@"))
+    	{
+    		editMessages.setText("Userid should not have an @... ");
+    		return false;
+    	}
+
+    	return true;
 	}
 
 	@Override
@@ -233,6 +272,7 @@ public class XMPPClient extends Activity {
         }
     }
 
+    // we got a command from the XMPP server, so send it out as a broadcast
 	void broadcastIntent(String RobotCommand) {
 		Intent BroadcastIntent = new Intent(ROBOT_COMMAND_INTENT);
 		BroadcastIntent.putExtra("robotCommand", RobotCommand);
@@ -242,6 +282,8 @@ public class XMPPClient extends Activity {
 
 	}
 
+	// we need a reciever to listen for amarino sending broadcasts
+	// with data from the arduino
 	public class ArduinoReceiver extends BroadcastReceiver {
 
 		@Override
@@ -261,15 +303,10 @@ public class XMPPClient extends Activity {
 				data = intent.getStringExtra(AmarinoIntent.EXTRA_DATA);
 
 				if (data != null){
-					sendDataToServer(data);
+					sendDataToServer(data);	// send the data that came from arduino out to the XMPP server
 
 				}
 			}
 		}
 	}
-
-    private void setText(int id, String value) {
-        EditText widget = (EditText) this.findViewById(id);
-        widget.setText(value);
-    }
  }
