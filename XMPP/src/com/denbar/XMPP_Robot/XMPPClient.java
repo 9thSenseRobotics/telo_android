@@ -20,6 +20,8 @@ public class XMPPClient extends Activity {
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
+        XMPPApplication.getInstance().setBluetoothAttemptsCounter(0);
+
         Log.i("XMPPClient", "onCreate called");
         setContentView(R.layout.main);
 
@@ -43,7 +45,6 @@ public class XMPPClient extends Activity {
         // values by simply swapping the strings.xml file, no code changes required.
 
         Resources robotResources = getResources();
-
         SharedPreferences prefs = getSharedPreferences("RobotPreferences", MODE_WORLD_WRITEABLE );
 
         robotName = prefs.getString("robotName",robotResources.getString(R.string.robot_name));
@@ -55,8 +56,11 @@ public class XMPPClient extends Activity {
         bluetooth = prefs.getString("bluetooth",robotResources.getString(R.string.bluetooth));
         recipient = prefs.getString("recipient",robotResources.getString(R.string.recipient));
 
-        // if we want global variables, this is how to set them
-        // XMPPApplication.getInstance().setGlobalStrings(robotName,host, port, service, userid, password, recipient);
+    	// set the global variable for the bluetooth device address
+        // do this early so that AmarinoIntentReceiver does not think
+        // we are connected to the wrong device simply due to
+        // the bluetooth address being not set in the global variable
+    	XMPPApplication.getInstance().setBluetoothAddress(bluetooth);
 
         // display the values for the user:
         editRobotName.setText(robotName);
@@ -95,11 +99,13 @@ public class XMPPClient extends Activity {
             	editor.putString("recipient", recipient);
             	editor.commit();
 
+            	// set the global variable for the bluetooth device address
+            	XMPPApplication.getInstance().setBluetoothAddress(bluetooth);
+
             	if (EntriesTest())
             	{
             		editSend.setText("");
                 	editMessages.setText("Entries saved, connecting to server.");
-            		//serverConnect();
 	        		Intent serviceIntent = new Intent();
 	        		serviceIntent.setAction("com.denbar.XMPP_Robot.StartupService");
 	        		// start up the service that does registration
@@ -119,6 +125,8 @@ public class XMPPClient extends Activity {
         		serviceIntent.setAction("com.denbar.XMPP_Robot.StartupService");
         		serviceIntent.putExtra("message", text);
         		startService(serviceIntent);
+        		editSend.setText("");
+        		editMessages.setText("sent to XMPP server: " + text);
             }
         });
     }	// ends on Create
@@ -133,46 +141,15 @@ public class XMPPClient extends Activity {
 
 	}
 
-
 	boolean EntriesTest()
 	{
-    	try {
-    	    int portNumber = Integer.parseInt(port);
-    	} catch(NumberFormatException nfe) {
-    		editMessages.setText("port number is not an integer");
-    		return false;
-    	}
-
-    	if ( (!recipient.contains("@")) || (!recipient.contains(".")))
-    	{
-    		editMessages.setText("Recipient does not have a valid address");
-    		return false;
-    	}
-
-    	if ( !host.contains("."))
-    	{
-    		editMessages.setText("host does not have a valid address");
-    		return false;
-    	}
-
-    	if ( !service.contains("."))
-    	{
-    		editMessages.setText("service does not have a valid address");
-    		return false;
-    	}
-
-    	if ( userid.contains("@"))
-    	{
-    		editMessages.setText("Userid should not have an @... ");
-    		return false;
-    	}
-
-    	if ( !bluetooth.contains(":"))
-    	{
-    		editMessages.setText("bluetooth address has incorrect format");
-    		return false;
-    	}
-
+    	try { int portNumber = Integer.parseInt(port); }
+    	catch(NumberFormatException nfe) { return false; }
+    	if ( (!recipient.contains("@")) || (!recipient.contains(".")))return false;
+    	if ( !host.contains(".")) return false;
+    	if ( !service.contains(".")) return false;
+    	if ( userid.contains("@")) return false;
+    	if ( !bluetooth.contains(":")) return false;
     	return true;
 	}
 

@@ -27,6 +27,9 @@ public class XMPPApplication extends Application {
     // global variables
     private String _robotName, _host, _port, _service, _userid, _password, _bluetooth, _recipient;
     private boolean _bluetoothConnected;
+    private String _bluetoothAddress;
+    private int _bluetoothAttemptsCounter;
+
     public static XMPPApplication getInstance()
     {
     		return singleton;
@@ -39,6 +42,42 @@ public class XMPPApplication extends Application {
     // XMPPApplication.getInstance().setGlobalStateValue(valuetest);
     // or
     // int valuetest = XMPPApplication.getInstance().getGlobalStateValue();
+
+    public void setBluetoothAddress(String value)
+    {
+    	_bluetoothAddress = value;
+    }
+
+    public String getBluetoothAddress()
+    {
+    	return _bluetoothAddress;
+    }
+
+    public boolean getBluetoothConnected()
+    {
+    	return _bluetoothConnected;
+    }
+
+    public void setBluetoothConnected(boolean value)
+    {
+    	_bluetoothConnected = value;
+    	if (value) _bluetoothAttemptsCounter = 0;
+    }
+
+    public int getBluetoothAttemptsCounter()
+    {
+    	return _bluetoothAttemptsCounter;
+    }
+
+    public void setBluetoothAttemptsCounter(int value)
+    {
+    	_bluetoothAttemptsCounter = value;
+    }
+
+    public void incrementBluetoothAttemptsCounter()
+    {
+    	_bluetoothAttemptsCounter++;
+    }
 
     public void setGlobalStrings(String robotName, String host,
     		String port, String service, String userid, String password, String recipient)
@@ -79,16 +118,6 @@ public class XMPPApplication extends Application {
     public String getrecipient()
     {
     	return _recipient;
-    }
-
-    public boolean getBluetoothConnected()
-    {
-    	return _bluetoothConnected;
-    }
-
-    public void setBluetoothConnected(boolean value)
-    {
-    	_bluetoothConnected = value;
     }
 
     @Override

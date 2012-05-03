@@ -40,6 +40,7 @@
                 <action android:name="amarino.intent.action.CONNECTED" />
                 <action android:name="amarino.intent.action.DISCONNECTED" />
                 <action android:name="amarino.intent.action.ACTION_CONNECTED_DEVICES" />
+                <action android:name="amarino.intent.action.COMMUNICATION_HALTED" />
 			</intent-filter>
         </receiver>
 

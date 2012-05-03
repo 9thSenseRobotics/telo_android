@@ -1,0 +1,152 @@
+Modifications made to Amarino_2
+
+in AmarinoService.java
+
+added a function and a call to say when communications are halted.
+This is needed because if the bluetooth has a momentary power fail,
+it disconnects but the amarino program thinks it is still connected.
+But it knows it is not communicating.
+So it responds to standard inquiries with
+amarino.intent.action.ACTION_CONNECTED_DEVICES
+indicating that the device is connected, when it really is not.
+So we need to pick up this state and send a disconnect/connect combination to get reconnected.
+
+
+	private void sendCommunicationHalted(String address){
+		String info = "communication_halted"; //getString(R.string.service_connection_to_failed, address);
+		Logger.d(TAG, info);
+		//notifyManager.notify(NOTIFY_ID, getNotification(info));
+
+		sendBroadcast(new Intent(AmarinoIntent.COMMUNICATIONS_HALTED)
+			.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, address));
+	}
+	
+	
+	changed:
+		            } catch (IOException e) {
+	            	Logger.d(TAG, "communication to " + mAddress + " halted");
+	                break;
+	            }
+
+to
+	            } catch (IOException e) {
+	            	Logger.d(TAG, "communication to " + mAddress + " halted");
+	            	sendCommunicationHalted(mAddress);
+	                break;
+	            }
+	            
+and, in AmarinoIntent.java, added this:
+
+	/**
+	 * Broadcast Action sent by <i>Amarino</i>: Communication attempts to a device
+	 * were not successful, so communications were halted, probably need to disconnect
+	 * and reconnect to the device
+	 *
+	 * <p>
+	 * The Intent will have the following extra value:
+	 * <ul>
+	 * <li><em>{@link #EXTRA_DEVICE_ADDRESS}</em> - the address of the device
+	 * which could not be connected</li>
+	 * </ul>
+	 * <p>
+	 * There are many reasons why this might happen.
+	 * </p>
+	 * <ul>
+	 * <li>Check if your Bluetooth module on your Arduino is powered and
+	 * properly connected</li>
+	 * <li>Due to an unexpected state either Bluetooth device might be in an
+	 * undefined state, reset your Bluetooth adapters.</li>
+	 * <li>Check the log of your phone using adb to gain more information why
+	 * the connection cannot be established.</li>
+	 * </ul>
+	 * </p>
+	 */
+	public static final String COMMUNICATIONS_HALTED = "amarino.intent.action.COMMUNICATIONS_HALTED";
+	
+	
+	
+	trying to connect to an already connected device causes terrible things to happen
+	ditto disconnecting from already disconnected device
+	
+	
+	in AmarinoSrevice:
+	changed:
+	
+		public void disconnect(final String address){
+		informPlugins(address, false);
+
+		ConnectedThread ct = connections.remove(address);
+		if (ct != null)
+			ct.cancel();
+
+		// end service if this was the last connection to disconnect
+		if (connections.size()==0){
+			serviceState = NO_CONNECTIONS;
+			shutdownService(true);
+		}
+		else {
+			serviceState = ACTIVE_CONNECTIONS;
+			notifyManager.notify(NOTIFY_ID,
+					getNotification(getString(R.string.service_active_connections, connections.size())));
+		}
+	}
+
+	
+	
+	to:
+	
+		public void disconnect(final String address){
+		if (serviceState == NO_CONNECTIONS) return;  //don't try to disconnect if we are already disconnected.
+		informPlugins(address, false);
+
+		ConnectedThread ct = connections.remove(address);
+		if (ct != null)
+			ct.cancel();
+
+		// end service if this was the last connection to disconnect
+		if (connections.size()==0){
+			serviceState = NO_CONNECTIONS;
+			shutdownService(true);
+		}
+		else {
+			serviceState = ACTIVE_CONNECTIONS;
+			notifyManager.notify(NOTIFY_ID,
+					getNotification(getString(R.string.service_active_connections, connections.size())));
+		}
+	}
+
+	
+and changed:
+	protected void connect(final String address){
+		if (address == null) return;
+		localDevice = LocalDevice.getInstance();
+		localDevice.init(this, new ReadyListener() {
+			@Override
+			public void ready() {
+				RemoteDevice device = localDevice.getRemoteForAddr(address);
+				localDevice.destroy();
+				new ConnectThread(device).start();
+			}
+		});
+
+	}
+
+
+to:
+
+	protected void connect(final String address){
+		if (address == null) return;
+		if (serviceState  != NO_CONNECTIONS) return; // for now, only allow one
+			// connection.  Later we can compare if this specific device is already connected
+			// but trying to connect to a device that is already connected is really bad
+		localDevice = LocalDevice.getInstance();
+		localDevice.init(this, new ReadyListener() {
+			@Override
+			public void ready() {
+				RemoteDevice device = localDevice.getRemoteForAddr(address);
+				localDevice.destroy();
+				new ConnectThread(device).start();
+			}
+		});
+
+	}

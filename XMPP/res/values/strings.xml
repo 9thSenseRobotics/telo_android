@@ -9,4 +9,5 @@
     <string name="password">9thsense</string>
     <string name="bluetooth">bluetooth address</string>
     <string name="recipient">controller@9thsense.com</string>
+    <string name="forwardToAddress">controller@9thsense.com</string>
 </resources>

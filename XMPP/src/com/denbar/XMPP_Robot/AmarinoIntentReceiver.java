@@ -39,41 +39,198 @@ public class AmarinoIntentReceiver extends BroadcastReceiver {
 			}
 		}
 
+
+		// amarino broadcasted an intent containing the devices it is connected to
+		// this might be a response to our inquiry or to someone elses (or internal
+		// request in amarino
+		// we use this as a way to know we are still connected to our bluetooth
+		// device and also that amarino is still working
 		else if ("amarino.intent.action.ACTION_CONNECTED_DEVICES".equals(action))
 		{
-			//String[] result = new String[addresses.size()];
-			//result = addresses.toArray(result);
-			//int test = intent.getExtra(AmarinoIntent.EXTRA_CONNECTED_DEVICES);
-			//String[] result = intent.getExtra(AmarinoIntent.EXTRA_CONNECTED_DEVICE_ADDRESSES);
+			String[] addresses = intent.getStringArrayExtra(AmarinoIntent.EXTRA_CONNECTED_DEVICE_ADDRESSES);
+			if (addresses != null)
+			{
+				for (int i=0; i < addresses.length; i++)
+				{
+					if (addresses[i].equals(XMPPApplication.getInstance().getBluetoothAddress()))
+					{
+						XMPPApplication.getInstance().setBluetoothConnected(true);
+						Toast.makeText(context, "Bluetooth Connected", Toast.LENGTH_LONG).show();
+						return;
+					}
+				}
+				Toast.makeText(context, "Bluetooth connected to device(s), but not ours", Toast.LENGTH_LONG).show();
+			}
+
+			else Toast.makeText(context, "Not connected to any bluetooth device", Toast.LENGTH_LONG).show();
+
+			// we are not connected to our bluetooth device, so try to connect
+			// if we have not already tried too much
+
+			// send this to keep track of where we are
+			String text = "IN ACTION_CONNECTED_DEVICES, attempt " + XMPPApplication.getInstance().getBluetoothAttemptsCounter();
+    		Intent serviceIntentTest = new Intent();
+    		serviceIntentTest.setAction("com.denbar.XMPP_Robot.StartupService");
+    		serviceIntentTest.putExtra("message", text);
+    		context.startService(serviceIntentTest);
+
+			if (XMPPApplication.getInstance().getBluetoothAttemptsCounter() < 5)
+			{
+				if (XMPPApplication.getInstance().getBluetoothAttemptsCounter() > 2)
+				{
+					// things are getting desperate if we are here
+					// try disconnecting
+					Intent intent3 = new Intent(AmarinoIntent.ACTION_DISCONNECT);
+					intent3.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
+					context.sendBroadcast(intent3);
+
+					// give it a little time to work, 5 seconds
+					try {Thread.sleep(10000);
+			        } catch (InterruptedException e) {
+			            e.printStackTrace();
+			        }
+				}
+
+				Intent intent1 = new Intent(AmarinoIntent.ACTION_CONNECT);
+				intent1.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
+				//intent.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, "00:06:66:46:5A:91");
+				context.sendBroadcast(intent1);
+
+				// give it a little time to work, 5 seconds
+				try {Thread.sleep(10000);
+		        } catch (InterruptedException e) {
+		            e.printStackTrace();
+		        }
+
+		        //ask again
+				Intent intent2 = new Intent(AmarinoIntent.ACTION_GET_CONNECTED_DEVICES);
+				intent2.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
+				context.sendBroadcast(intent2);
+				// give it a little time to work, 5 seconds
+				try {Thread.sleep(10000);
+		        } catch (InterruptedException e) {
+		            e.printStackTrace();
+		        }
+
+				// increment the counter, so we don't ask too many times
+				XMPPApplication.getInstance().incrementBluetoothAttemptsCounter();
+			}
+			else	// time to give up, something is seriously wrong (bluetooth hardware stopped?).
+			{
+				XMPPApplication.getInstance().setBluetoothConnected(false);
+				// we could send an intent to the service, but
+				// there is not much to do about it, so we don't
+				// note that it is better to send a string rather than a boolean
+				// so that the service can check for null and determine if an intent
+				// was sent from here, whereas the boolean has to have a default value
+				//Intent serviceIntent = new Intent();
+				//serviceIntent.setAction("com.denbar.XMPP_Robot.StartupService");
+				//serviceIntent.putExtra("bluetooth", "unconnected");
+				//context.startService(serviceIntent);
+			}
 		}
 
 		else if ("amarino.intent.action.CONNECTED".equals(action))
 		{
-			Toast.makeText(context, "Bluetooth Connected", Toast.LENGTH_SHORT).show();
-			XMPPApplication.getInstance().setBluetoothConnected(true);
-
+			// we need to be sure that the connection is to our bluetooth device
+			String address = intent.getStringExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS);
+			if (address.equals(XMPPApplication.getInstance().getBluetoothAddress()))
+			{
+				XMPPApplication.getInstance().setBluetoothConnected(true);
+				Toast.makeText(context, "Bluetooth connected to correct device", Toast.LENGTH_SHORT).show();
+			}
+			// we are not connected to our bluetooth device
+			// only take an action if it is not already in work
+			else if (XMPPApplication.getInstance().getBluetoothAttemptsCounter() == 0)
+			{
+				Toast.makeText(context, "Bluetooth connected to wrong device", Toast.LENGTH_SHORT).show();
+				XMPPApplication.getInstance().setBluetoothConnected(false);
+				Intent intent1 = new Intent(AmarinoIntent.ACTION_GET_CONNECTED_DEVICES);
+				intent1.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
+			}
 		}
 
 		else if ("amarino.intent.action.DISCONNECTED".equals(action))
 		{
-			Toast.makeText(context, "Bluetooth disonnected!!!", Toast.LENGTH_LONG).show();
-			XMPPApplication.getInstance().setBluetoothConnected(false);
-    		Intent serviceIntent = new Intent();
-    		serviceIntent.setAction("com.denbar.XMPP_Robot.StartupService");
-    		serviceIntent.putExtra("bluetooth", false);
-    		//context.startService(serviceIntent);
+			// we need to be sure that the disconnection is to our bluetooth device
+			String address = intent.getStringExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS);
+			if (!address.equals(XMPPApplication.getInstance().getBluetoothAddress()))
+			{
+				Toast.makeText(context, "Bluetooth disconnected from some other bluetooth device", Toast.LENGTH_SHORT).show();
+			}
+			// we are not connected to our bluetooth device
+			// only take an action if it is not already in work
+			else if (XMPPApplication.getInstance().getBluetoothAttemptsCounter() == 0)
+			{
+				Intent intent1 = new Intent(AmarinoIntent.ACTION_GET_CONNECTED_DEVICES);
+				intent1.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
+				context.sendBroadcast(intent1);
+				XMPPApplication.getInstance().setBluetoothConnected(false);
+				Toast.makeText(context, "Bluetooth disconnected from our device", Toast.LENGTH_SHORT).show();
+			}
 		}
 
 		else if ("amarino.intent.action.CONNECTION_FAILED".equals(action))
 		{
-			Toast.makeText(context, "Bluetooth connection failed!!!", Toast.LENGTH_LONG).show();
-			XMPPApplication.getInstance().setBluetoothConnected(false);
-    		Intent serviceIntent = new Intent();
-    		serviceIntent.setAction("com.denbar.XMPP_Robot.StartupService");
-    		serviceIntent.putExtra("bluetooth", false);
-    		//context.startService(serviceIntent);
-
+			// we need to be sure that the disconnection is to our bluetooth device
+			String address = intent.getStringExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS);
+			if (!address.equals(XMPPApplication.getInstance().getBluetoothAddress()))
+			{
+				Toast.makeText(context, "Bluetooth failed to connect to some other bluetooth device", Toast.LENGTH_SHORT).show();
+			}
+			// we are not connected to our bluetooth device
+			// only take an action if it is not already in work
+			else if (XMPPApplication.getInstance().getBluetoothAttemptsCounter() == 0)
+			{
+				Intent intent1 = new Intent(AmarinoIntent.ACTION_GET_CONNECTED_DEVICES);
+				intent1.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
+				context.sendBroadcast(intent1);
+				XMPPApplication.getInstance().setBluetoothConnected(false);
+				Toast.makeText(context, "Bluetooth failed to connect to our device", Toast.LENGTH_SHORT).show();
+			}
 		}
+		else if ("amarino.intent.action.COMMUNICATIONS_HALTED".equals(action))
+		{
+			// this is the signature of a momentary bluetooth power fail
+			// this is my addition to the original Amarino_2 code
+			//added a function and a call to say when communications are halted.
+			//This is needed because if the bluetooth has a momentary power fail,
+			//it disconnects but the amarino program thinks it is still connected.
+			//But it knows it is not communicating.
+			//So it responds to standard inquiries with
+			//amarino.intent.action.ACTION_CONNECTED_DEVICES
+			//indicating that the device is connected, when it really is not.
+			//So we need to pick up this state and send a disconnect/connect combination to get reconnected.
+			//
+			// we need to be sure that the comm halt is to our bluetooth device
+			String address = intent.getStringExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS);
+			if (!address.equals(XMPPApplication.getInstance().getBluetoothAddress()))
+			{
+				Toast.makeText(context, "Bluetooth comm halted to some other bluetooth device", Toast.LENGTH_SHORT).show();
+			}
+			// our bluetooth device probably had a momentary power fail
+			// first we need to tell amarino to disconnect
 
-	}
+			// limit the attempts, so we don't burn up trying
+			if (XMPPApplication.getInstance().getBluetoothAttemptsCounter() < 5)
+			{
+				Intent intent5 = new Intent(AmarinoIntent.ACTION_DISCONNECT);
+				intent5.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
+				context.sendBroadcast(intent5);
+
+				// give it a little time to work, 5 seconds
+				try {Thread.sleep(5000);
+		        } catch (InterruptedException e) {
+		            e.printStackTrace();
+		        }
+
+		        // and now go to our standard attempt to reconnect:
+				Intent intent1 = new Intent(AmarinoIntent.ACTION_GET_CONNECTED_DEVICES);
+				intent1.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
+				context.sendBroadcast(intent1);
+				XMPPApplication.getInstance().setBluetoothConnected(false);
+				Toast.makeText(context, "Bluetooth comm halted to our device", Toast.LENGTH_SHORT).show();
+			}
+		}
+	}	// closes onReceive
 }
