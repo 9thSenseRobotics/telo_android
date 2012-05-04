@@ -64,6 +64,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -86,6 +87,8 @@ class MessageToRobot extends RobotMessages
 //	mtr = new messageToRobot(driverAddr, driverName, robotAddr, responseValue [, commandArguments] [, comment]);
 
 {
+
+
 	public MessageToRobot(String xmlStr)
 	// single-argument constructor: Build this class from its XML string
 	{
@@ -94,10 +97,10 @@ class MessageToRobot extends RobotMessages
 		{
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			dbf.setValidating(false);
-			dbf.setFeature("http://xml.org/sax/features/namespaces", false);
-			dbf.setFeature("http://xml.org/sax/features/validation", false);
-			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
-			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+			//dbf.setFeature("http://xml.org/sax/features/namespaces", false);
+			//dbf.setFeature("http://xml.org/sax/features/validation", false);
+			//dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
+			//dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
 			DocumentBuilder db = dbf.newDocumentBuilder();
 			ByteArrayInputStream stream = new ByteArrayInputStream(xmlStr.getBytes());
 			XML = db.parse(stream);

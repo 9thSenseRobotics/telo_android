@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 public class XMPPClient extends Activity {
 
@@ -21,6 +22,8 @@ public class XMPPClient extends Activity {
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         XMPPApplication.getInstance().setBluetoothAttemptsCounter(0);
+        Toast.makeText(this, "client created, counter zeroed", Toast.LENGTH_SHORT).show();
+
 
         Log.i("XMPPClient", "onCreate called");
         setContentView(R.layout.main);
@@ -134,6 +137,7 @@ public class XMPPClient extends Activity {
 	@Override
 	protected void onStart() {
 		super.onStart();
+		Toast.makeText(this, "client started", Toast.LENGTH_SHORT).show();
     	if (!EntriesTest())
     	{
     		editSend.setText("There is a error in at least one of the entries");

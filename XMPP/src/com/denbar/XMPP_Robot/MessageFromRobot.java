@@ -62,6 +62,7 @@ import javax.xml.transform.dom.*;
 import javax.xml.transform.stream.*;
 
 
+
 class MessageFromRobot extends RobotMessages
 // For messages that are sent from a driver or controller to the robot
 // properties:
@@ -86,10 +87,10 @@ class MessageFromRobot extends RobotMessages
 		{
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			dbf.setValidating(false);
-			dbf.setFeature("http://xml.org/sax/features/namespaces", false);
-			dbf.setFeature("http://xml.org/sax/features/validation", false);
-			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
-			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+			//dbf.setFeature("http://xml.org/sax/features/namespaces", false);
+			//dbf.setFeature("http://xml.org/sax/features/validation", false);
+			//dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
+			//dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
 			DocumentBuilder db = dbf.newDocumentBuilder();
 			ByteArrayInputStream stream = new ByteArrayInputStream(xmlStr.getBytes());
 			XML = db.parse(stream);

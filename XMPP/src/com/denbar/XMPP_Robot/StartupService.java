@@ -35,6 +35,9 @@ public class StartupService extends Service {
 	public void onCreate() {
 		super.onCreate();
 		XMPPApplication.getInstance().setBluetoothAttemptsCounter(0);
+		XMPPApplication.getInstance().setBluetoothConnected(false);
+		Toast.makeText(this, "Service created, counter zeroed", Toast.LENGTH_SHORT).show();
+
 		connection = null;
 
         Resources robotResources = getResources();
@@ -53,7 +56,15 @@ public class StartupService extends Service {
     	if (EntriesTest())
         {
         	XMPPApplication.getInstance().setBluetoothAddress(bluetooth);
-        	if (!XMPPApplication.getInstance().getBluetoothConnected()) bluetoothInquire();
+        	// send just one connect command to amarino, it gets messed up otherwise
+        	if (!XMPPApplication.getInstance().getBluetoothConnected())
+        	{
+        		//bluetoothInquire();
+        		Intent intent = new Intent(AmarinoIntent.ACTION_CONNECT);
+        		intent.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
+        		sendBroadcast(intent);
+        		Toast.makeText(this, "Asking Amarino to connect to bluetooth", Toast.LENGTH_LONG).show();
+        	}
         	if (connection == null) serverConnect();
         }
         else
@@ -75,6 +86,7 @@ public class StartupService extends Service {
 			Toast.makeText(this, "Recovering from abnormal shutdown.....", Toast.LENGTH_LONG).show();
 		}
 
+		Toast.makeText(this, "service started", Toast.LENGTH_SHORT).show();
 		if (intent != null)	// intent is null if it is system restart
 		{
 			String messageToXMPP_Server = intent.getStringExtra("message");
@@ -94,7 +106,7 @@ public class StartupService extends Service {
 		{
 			Intent intent1 = new Intent(AmarinoIntent.ACTION_GET_CONNECTED_DEVICES);
 			intent1.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
-			sendBroadcast(intent1);
+			//sendBroadcast(intent1);
 		}
 	}
 
@@ -135,7 +147,9 @@ public class StartupService extends Service {
 	        Log.e("XMPPClient", "[SettingsDialog] Failed to log in as " + userid);
 	        Log.e("XMPPClient", ex.toString());
 	        setConnection(null);
-	        Toast.makeText(this, "XMPP Log in failed", Toast.LENGTH_SHORT).show();
+        	Toast.makeText(this, "XMPP Log in failed, opening XMPPClient", Toast.LENGTH_LONG).show();
+        	Intent XMPPClientIntent = new Intent(this, XMPPClient.class);
+        	startActivity(XMPPClientIntent);
 	    }
 
 /*
@@ -168,18 +182,23 @@ public class StartupService extends Service {
                         //Log.i("XMPPClient", "Got text [" + message.getBody() + "] from [" + fromName + "]");
                         // broadcast the incoming message
                         String body = StringUtils.parseBareAddress(message.getBody());
-                        MessageToRobot  myMessage  = new MessageToRobot(body);
-                        if (myMessage.driverAddr != null) forwardToAddress = myMessage.driverAddr;
-                        if (myMessage.commandChar != null)
-                        {
-	                        final String robotCommand = myMessage.commandChar;
+                        //MessageToRobot  myMessage  = new MessageToRobot(body);
+                        //String firstPart = "<m><t>1336044363.1334708318360</t><d>driverAddr</d><dn>driverName</dn><r>robotAddr</r>";
+                        //String lastPart = ",</c><a>commandArguments</a><co>comment</co></m>";
+                        //MessageToRobot  myMessage  = new MessageToRobot(firstPart + body +lastPart);
+                        //if (myMessage.driverAddr != null) forwardToAddress = myMessage.driverAddr;
+                        //if (myMessage.commandChar != null)
+                        //{
+	                        //final String robotCommand = myMessage.commandChar;
+	                        //final String robotCommand = firstPart + body + lastPart;
+                        final String robotCommand = message.getBody();
 	                        mHandler.post(new Runnable() {
 	                           public void run() {
 	                        	   //broadcastIntent(payload);
 	                        	   sendDataToAmarino(robotCommand);
 	                            }
 	                        });
-                        }
+                        //}
                     }
                 }
             }, filter);
@@ -191,8 +210,8 @@ public class StartupService extends Service {
 	    if (connection != null)
 	    {
 	    	Log.i("XMPPClient", "Sending text [" + data + "] to [" + recipient + "]");
-	    	//MessageFromRobot myFromMessage = new MessageFromRobot("test@test.com", userid, data);
 	    	//MessageFromRobot myFromMessage = new MessageFromRobot(forwardToAddress, userid, data);
+	    	//MessageFromRobot myFromMessage = new MessageFromRobot("test", "test", "test");
 	    	Message msg = new Message(recipient, Message.Type.chat);
 	    	msg.setBody(data);
 	    	//msg.setBody(myFromMessage.XMLStr);
@@ -206,13 +225,13 @@ public class StartupService extends Service {
 
 	private void sendDataToAmarino(String robotCommand)
 	{
-		if (!XMPPApplication.getInstance().getBluetoothConnected())
+		/*if (!XMPPApplication.getInstance().getBluetoothConnected())
 		{
 			bluetoothInquire();
 			Toast.makeText(this, "Skipping sendDataToAmarino, bluetooth not connected", Toast.LENGTH_SHORT).show();
 	        return;
 		}
-
+		*/
 		char cmdChar = robotCommand.charAt(0);
 		int commandedSpeed = 178;	// we will get this as a commanded value later
 		Intent intentAmarino = new Intent(AmarinoIntent.ACTION_SEND);

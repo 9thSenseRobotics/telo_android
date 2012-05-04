@@ -54,8 +54,8 @@ public class AmarinoIntentReceiver extends BroadcastReceiver {
 				{
 					if (addresses[i].equals(XMPPApplication.getInstance().getBluetoothAddress()))
 					{
-						XMPPApplication.getInstance().setBluetoothConnected(true);
-						Toast.makeText(context, "Bluetooth Connected", Toast.LENGTH_LONG).show();
+						XMPPApplication.getInstance().setBluetoothConnected(true); // also zeros the counter
+						Toast.makeText(context, "Bluetooth Connected, counter zeroed", Toast.LENGTH_SHORT).show();
 						return;
 					}
 				}
@@ -67,12 +67,14 @@ public class AmarinoIntentReceiver extends BroadcastReceiver {
 			// we are not connected to our bluetooth device, so try to connect
 			// if we have not already tried too much
 
+			XMPPApplication.getInstance().setBluetoothConnected(false);
+
 			// send this to keep track of where we are
 			String text = "IN ACTION_CONNECTED_DEVICES, attempt " + XMPPApplication.getInstance().getBluetoothAttemptsCounter();
     		Intent serviceIntentTest = new Intent();
     		serviceIntentTest.setAction("com.denbar.XMPP_Robot.StartupService");
     		serviceIntentTest.putExtra("message", text);
-    		context.startService(serviceIntentTest);
+    		//context.startService(serviceIntentTest);
 
 			if (XMPPApplication.getInstance().getBluetoothAttemptsCounter() < 5)
 			{
@@ -82,7 +84,7 @@ public class AmarinoIntentReceiver extends BroadcastReceiver {
 					// try disconnecting
 					Intent intent3 = new Intent(AmarinoIntent.ACTION_DISCONNECT);
 					intent3.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
-					context.sendBroadcast(intent3);
+					//context.sendBroadcast(intent3);
 
 					// give it a little time to work, 5 seconds
 					try {Thread.sleep(10000);
@@ -94,7 +96,7 @@ public class AmarinoIntentReceiver extends BroadcastReceiver {
 				Intent intent1 = new Intent(AmarinoIntent.ACTION_CONNECT);
 				intent1.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
 				//intent.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, "00:06:66:46:5A:91");
-				context.sendBroadcast(intent1);
+				//context.sendBroadcast(intent1);
 
 				// give it a little time to work, 5 seconds
 				try {Thread.sleep(10000);
@@ -105,7 +107,7 @@ public class AmarinoIntentReceiver extends BroadcastReceiver {
 		        //ask again
 				Intent intent2 = new Intent(AmarinoIntent.ACTION_GET_CONNECTED_DEVICES);
 				intent2.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
-				context.sendBroadcast(intent2);
+				//context.sendBroadcast(intent2);
 				// give it a little time to work, 5 seconds
 				try {Thread.sleep(10000);
 		        } catch (InterruptedException e) {
@@ -136,14 +138,14 @@ public class AmarinoIntentReceiver extends BroadcastReceiver {
 			String address = intent.getStringExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS);
 			if (address.equals(XMPPApplication.getInstance().getBluetoothAddress()))
 			{
-				XMPPApplication.getInstance().setBluetoothConnected(true);
+				XMPPApplication.getInstance().setBluetoothConnected(true); // also zeros the counter
 				Toast.makeText(context, "Bluetooth connected to correct device", Toast.LENGTH_SHORT).show();
 			}
-			// we are not connected to our bluetooth device
+			// this broadcast was not about our bluetooth device
 			// only take an action if it is not already in work
 			else if (XMPPApplication.getInstance().getBluetoothAttemptsCounter() == 0)
 			{
-				Toast.makeText(context, "Bluetooth connected to wrong device", Toast.LENGTH_SHORT).show();
+				Toast.makeText(context, "Bluetooth connected to some other device", Toast.LENGTH_SHORT).show();
 				XMPPApplication.getInstance().setBluetoothConnected(false);
 				Intent intent1 = new Intent(AmarinoIntent.ACTION_GET_CONNECTED_DEVICES);
 				intent1.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
@@ -164,7 +166,7 @@ public class AmarinoIntentReceiver extends BroadcastReceiver {
 			{
 				Intent intent1 = new Intent(AmarinoIntent.ACTION_GET_CONNECTED_DEVICES);
 				intent1.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
-				context.sendBroadcast(intent1);
+				//context.sendBroadcast(intent1);
 				XMPPApplication.getInstance().setBluetoothConnected(false);
 				Toast.makeText(context, "Bluetooth disconnected from our device", Toast.LENGTH_SHORT).show();
 			}
@@ -184,7 +186,7 @@ public class AmarinoIntentReceiver extends BroadcastReceiver {
 			{
 				Intent intent1 = new Intent(AmarinoIntent.ACTION_GET_CONNECTED_DEVICES);
 				intent1.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
-				context.sendBroadcast(intent1);
+				//context.sendBroadcast(intent1);
 				XMPPApplication.getInstance().setBluetoothConnected(false);
 				Toast.makeText(context, "Bluetooth failed to connect to our device", Toast.LENGTH_SHORT).show();
 			}
@@ -216,7 +218,7 @@ public class AmarinoIntentReceiver extends BroadcastReceiver {
 			{
 				Intent intent5 = new Intent(AmarinoIntent.ACTION_DISCONNECT);
 				intent5.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
-				context.sendBroadcast(intent5);
+				//context.sendBroadcast(intent5);
 
 				// give it a little time to work, 5 seconds
 				try {Thread.sleep(5000);
@@ -227,7 +229,7 @@ public class AmarinoIntentReceiver extends BroadcastReceiver {
 		        // and now go to our standard attempt to reconnect:
 				Intent intent1 = new Intent(AmarinoIntent.ACTION_GET_CONNECTED_DEVICES);
 				intent1.putExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS, XMPPApplication.getInstance().getBluetoothAddress());
-				context.sendBroadcast(intent1);
+				//context.sendBroadcast(intent1);
 				XMPPApplication.getInstance().setBluetoothConnected(false);
 				Toast.makeText(context, "Bluetooth comm halted to our device", Toast.LENGTH_SHORT).show();
 			}
