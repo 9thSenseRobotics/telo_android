@@ -138,23 +138,46 @@ public class XMPPClient extends Activity {
 	protected void onStart() {
 		super.onStart();
 		Toast.makeText(this, "client started", Toast.LENGTH_SHORT).show();
-    	if (!EntriesTest())
-    	{
-    		editSend.setText("There is a error in at least one of the entries");
-    	}
-
+    	EntriesTest();
 	}
 
 	boolean EntriesTest()
 	{
+    	boolean returnResult = true;
+    	String message = "There is a error in ";
     	try { int portNumber = Integer.parseInt(port); }
-    	catch(NumberFormatException nfe) { return false; }
-    	if ( (!recipient.contains("@")) || (!recipient.contains(".")))return false;
-    	if ( !host.contains(".")) return false;
-    	if ( !service.contains(".")) return false;
-    	if ( userid.contains("@")) return false;
-    	if ( !bluetooth.contains(":")) return false;
-    	return true;
+    	catch(NumberFormatException nfe)
+    	{
+    		message += "port, ";
+    		returnResult = false;
+    	}
+    	if ( (!recipient.contains("@")) || (!recipient.contains(".")))
+    	{
+    		message += "recipient, ";
+        	returnResult = false;
+    	}
+    	if ( !host.contains("."))
+    	{
+    		message += "host,";
+        	returnResult = false;
+    	}
+    	if ( !service.contains("."))
+    	{
+    		message += "service, ";
+        	returnResult = false;
+    	}
+    	if ( userid.contains("@"))
+    	{
+    		message += "userid,";
+        		returnResult = false;
+    	}
+    	if ( (!bluetooth.contains(":")) || (!(bluetooth.length() == 17)))
+    	{
+    		message += "bluetooth ";
+        	returnResult = false;
+    	}
+    	if (!returnResult) editSend.setText(message);
+    	return returnResult;
 	}
 
 	@Override
