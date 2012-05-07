@@ -124,6 +124,9 @@ public class XMPPApplication extends Application {
     public final void onCreate() {
     	super.onCreate();
     	singleton = this;
+    	_bluetoothAddress = "incorrect address";  // this needs to set by the program,
+		// otherwise every bot would needs its own compiled software version
+    	_bluetoothConnected = false;
     }
 
     // other life cycle events are included here just as a reminder of what overrides are available
