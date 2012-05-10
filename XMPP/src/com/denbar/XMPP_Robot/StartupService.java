@@ -178,24 +178,19 @@ public class StartupService extends Service {
                 public void processPacket(Packet packet) {
                     Message message = (Message) packet;
                     if (message.getBody() != null) {
-                        //String fromName = StringUtils.parseBareAddress(message.getFrom());
-                        //Log.i("XMPPClient", "Got text [" + message.getBody() + "] from [" + fromName + "]");
-                        // broadcast the incoming message
                         String body = StringUtils.parseBareAddress(message.getBody());
-                        //MessageToRobot  myMessage  = new MessageToRobot(body);
-                        //String firstPart = "<m><t>1336044363.1334708318360</t><d>driverAddr</d><dn>driverName</dn><r>robotAddr</r>";
-                        //String lastPart = ",</c><a>commandArguments</a><co>comment</co></m>";
-                        //MessageToRobot  myMessage  = new MessageToRobot(firstPart + body +lastPart);
-                        //if (myMessage.driverAddr != null) forwardToAddress = myMessage.driverAddr;
-                        //if (myMessage.commandChar != null)
-                        //{
-	                        //final String robotCommand = myMessage.commandChar;
-	                        //final String robotCommand = firstPart + body + lastPart;
-                        final String robotCommand = message.getBody();
+                        MessageToRobot  myMessage  = new MessageToRobot(message.getBody());
+	                    final String robotCommand = myMessage.commandChar;
+	                    final String robotArguments = myMessage.commandArguments;
 	                        mHandler.post(new Runnable() {
 	                           public void run() {
 	                        	   //broadcastIntent(payload);
-	                        	   sendDataToAmarino(robotCommand);
+	                        	   if (robotArguments != null)
+	                        	   {
+	                        	       sendDataToAmarino(robotCommand + robotArguments);
+	                        	   } else {
+	                        	       sendDataToAmarino(robotCommand);
+	                        	   }
 	                            }
 	                        });
                         //}
@@ -241,7 +236,8 @@ public class StartupService extends Service {
 		intentAmarino.putExtra(AmarinoIntent.EXTRA_DATA, commandedSpeed);
 		sendBroadcast(intentAmarino);
         Toast.makeText(this, robotCommand, Toast.LENGTH_SHORT).show();
-        sendDataToServer(robotCommand);	// echo the command back to the XMPP server
+        MessageFromRobot responseMessage = new MessageFromRobot("driverAddr", "robotAddr", "Response is " + robotCommand);
+        sendDataToServer(responseMessage.XMLStr);	// echo the command back to the XMPP server
 	}
 
 	boolean EntriesTest()

@@ -45,7 +45,7 @@ public class XMPPApplication extends Application {
 
     public void setBluetoothAddress(String value)
     {
-    	_bluetoothAddress = value;
+    	_bluetoothAddress = value.toUpperCase();
     }
 
     public String getBluetoothAddress()

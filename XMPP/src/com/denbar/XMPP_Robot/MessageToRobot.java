@@ -49,7 +49,7 @@
 		<co>comment</co>
 	</m>
 
-*/
+ */
 package com.denbar.XMPP_Robot;
 
 //package java_xml_library;
@@ -113,27 +113,27 @@ class MessageToRobot extends RobotMessages
 		try {
 			timeStamp = e.getTextContent();
 		} catch (Exception e1) {
-			timeStamp = "";
+			timeStamp = null;
 		}
 
 		try {
-	// 		<d>driverAddr</d>
+			// 		<d>driverAddr</d>
 			nl = XML.getElementsByTagName("d");
 			n = nl.item(0);
 			e = (Element)n;
 			driverAddr = e.getTextContent();
 		} catch (Exception e1) {
-			driverAddr = "";
+			driverAddr = null;
 		}
 
 		try {
-	// 		<dn>driverName</dn>
+			// 		<dn>driverName</dn>
 			nl = XML.getElementsByTagName("dn");
 			n = nl.item(0);
 			e = (Element)n;
 			driverName = e.getTextContent();
 		} catch (Exception e1) {
-			driverName= "";
+			driverName= null;
 		}
 
 
@@ -145,7 +145,7 @@ class MessageToRobot extends RobotMessages
 			e = (Element)n;
 			robotAddr = e.getTextContent();
 		} catch (Exception e1) {
-			robotAddr= "";
+			robotAddr= null;
 		}
 
 		try {
@@ -155,7 +155,7 @@ class MessageToRobot extends RobotMessages
 			e = (Element)n;
 			commandChar = e.getTextContent();
 		} catch (Exception e1) {
-			commandChar= "";
+			commandChar= null;
 		}
 
 		try {
@@ -165,7 +165,7 @@ class MessageToRobot extends RobotMessages
 			e = (Element)n;
 			commandArguments= e.getTextContent();
 		} catch (Exception e1) {
-			commandArguments= "";
+			commandArguments= null;
 		}
 
 		try {
@@ -175,7 +175,7 @@ class MessageToRobot extends RobotMessages
 			e = (Element)n;
 			comment = e.getTextContent();
 		} catch (Exception e1) {
-			comment= "";
+			comment= null;
 		}
 
 		// now re-create XMLStr from the DOM (this makes absolutely sure the syntax was correct)
@@ -215,53 +215,51 @@ class MessageToRobot extends RobotMessages
 			dbf.setValidating(false);
 			dbf.setFeature("http://xml.org/sax/features/namespaces", false);
 			dbf.setFeature("http://xml.org/sax/features/validation", false);
-			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
-			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
 			DocumentBuilder db = dbf.newDocumentBuilder();
 			XML = db.newDocument();
+
+			Element m = XML.createElement("m");
+			XML.appendChild(m);
+			Element rootElement = XML.getDocumentElement();
+
+			// 		<t>timeStamp</t>
+			Element t = XML.createElement("t");
+			t.appendChild (XML.createTextNode(timeStamp));
+			rootElement.appendChild(t);
+
+			// 		$this->XML->addChild('d', $this->driverAddr);
+			Element d = XML.createElement("d");
+			d.appendChild (XML.createTextNode(driverAddr));
+			rootElement.appendChild(d);
+
+			// 		$this->XML->addChild('d', $this->driverName);
+			Element ddn = XML.createElement("dn");
+			ddn.appendChild (XML.createTextNode(driverName));
+			rootElement.appendChild(ddn);
+
+			// 		$this->XML->addChild('r', $this->robotAddr);
+			Element r = XML.createElement("r");
+			r.appendChild (XML.createTextNode(robotAddr));
+			rootElement.appendChild(r);
+
+			// 		$this->XML->addChild('c', $this->commandChar);
+			Element c = XML.createElement("c");
+			c.appendChild (XML.createTextNode(commandChar));
+			rootElement.appendChild(c);
+
+			// 		$this->XML->addChild('a', $this->commandArguments);
+			Element a = XML.createElement("a");
+			a.appendChild (XML.createTextNode(commandArguments));
+			rootElement.appendChild(a);
+
+
+			// 		$this->XML->addChild('co', $this->comment);
+			Element co = XML.createElement("co");
+			co.appendChild (XML.createTextNode(comment));
+			rootElement.appendChild(co);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-		Element m = XML.createElement("m");
-		XML.appendChild(m);
-		Element rootElement = XML.getDocumentElement();
-
-// 		<t>timeStamp</t>
-		Element t = XML.createElement("t");
-		t.appendChild (XML.createTextNode(timeStamp));
-		rootElement.appendChild(t);
-
-// 		$this->XML->addChild('d', $this->driverAddr);
-		Element d = XML.createElement("d");
-		d.appendChild (XML.createTextNode(driverAddr));
-		rootElement.appendChild(d);
-
-// 		$this->XML->addChild('d', $this->driverName);
-		Element ddn = XML.createElement("dn");
-		ddn.appendChild (XML.createTextNode(driverName));
-		rootElement.appendChild(ddn);
-
-// 		$this->XML->addChild('r', $this->robotAddr);
-		Element r = XML.createElement("r");
-		r.appendChild (XML.createTextNode(robotAddr));
-		rootElement.appendChild(r);
-
-// 		$this->XML->addChild('c', $this->commandChar);
-		Element c = XML.createElement("c");
-		c.appendChild (XML.createTextNode(commandChar));
-		rootElement.appendChild(c);
-
-// 		$this->XML->addChild('a', $this->commandArguments);
-		Element a = XML.createElement("a");
-		a.appendChild (XML.createTextNode(commandArguments));
-		rootElement.appendChild(a);
-
-
-// 		$this->XML->addChild('co', $this->comment);
-		Element co = XML.createElement("co");
-		co.appendChild (XML.createTextNode(comment));
-		rootElement.appendChild(co);
 		try
 		{
 			DOMSource source = new DOMSource(XML);
@@ -298,53 +296,51 @@ class MessageToRobot extends RobotMessages
 			dbf.setValidating(false);
 			dbf.setFeature("http://xml.org/sax/features/namespaces", false);
 			dbf.setFeature("http://xml.org/sax/features/validation", false);
-			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
-			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
 			DocumentBuilder db = dbf.newDocumentBuilder();
 			XML = db.newDocument();
+
+			Element m = XML.createElement("m");
+			XML.appendChild(m);
+			Element rootElement = XML.getDocumentElement();
+
+			// 		<t>timeStamp</t>
+			Element t = XML.createElement("t");
+			t.appendChild (XML.createTextNode(timeStamp));
+			rootElement.appendChild(t);
+
+			// 		$this->XML->addChild('d', $this->driverAddr);
+			Element d = XML.createElement("d");
+			d.appendChild (XML.createTextNode(driverAddr));
+			rootElement.appendChild(d);
+
+			// 		$this->XML->addChild('d', $this->driverName);
+			Element ddn = XML.createElement("dn");
+			ddn.appendChild (XML.createTextNode(driverName));
+			rootElement.appendChild(ddn);
+
+			// 		$this->XML->addChild('r', $this->robotAddr);
+			Element r = XML.createElement("r");
+			r.appendChild (XML.createTextNode(robotAddr));
+			rootElement.appendChild(r);
+
+			// 		$this->XML->addChild('c', $this->commandChar);
+			Element c = XML.createElement("c");
+			c.appendChild (XML.createTextNode(commandChar));
+			rootElement.appendChild(c);
+
+			// 		$this->XML->addChild('a', $this->commandArguments);
+			Element a = XML.createElement("a");
+			a.appendChild (XML.createTextNode(commandArguments));
+			rootElement.appendChild(a);
+
+
+			// 		$this->XML->addChild('co', $this->comment);
+			Element co = XML.createElement("co");
+			co.appendChild (XML.createTextNode(comment));
+			rootElement.appendChild(co);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-		Element m = XML.createElement("m");
-		XML.appendChild(m);
-		Element rootElement = XML.getDocumentElement();
-
-// 		<t>timeStamp</t>
-		Element t = XML.createElement("t");
-		t.appendChild (XML.createTextNode(timeStamp));
-		rootElement.appendChild(t);
-
-// 		$this->XML->addChild('d', $this->driverAddr);
-		Element d = XML.createElement("d");
-		d.appendChild (XML.createTextNode(driverAddr));
-		rootElement.appendChild(d);
-
-// 		$this->XML->addChild('d', $this->driverName);
-		Element ddn = XML.createElement("dn");
-		ddn.appendChild (XML.createTextNode(driverName));
-		rootElement.appendChild(ddn);
-
-// 		$this->XML->addChild('r', $this->robotAddr);
-		Element r = XML.createElement("r");
-		r.appendChild (XML.createTextNode(robotAddr));
-		rootElement.appendChild(r);
-
-// 		$this->XML->addChild('c', $this->commandChar);
-		Element c = XML.createElement("c");
-		c.appendChild (XML.createTextNode(commandChar));
-		rootElement.appendChild(c);
-
-// 		$this->XML->addChild('a', $this->commandArguments);
-		Element a = XML.createElement("a");
-		a.appendChild (XML.createTextNode(commandArguments));
-		rootElement.appendChild(a);
-
-
-// 		$this->XML->addChild('co', $this->comment);
-		Element co = XML.createElement("co");
-		co.appendChild (XML.createTextNode(comment));
-		rootElement.appendChild(co);
 		try
 		{
 			DOMSource source = new DOMSource(XML);
@@ -381,53 +377,51 @@ class MessageToRobot extends RobotMessages
 			dbf.setValidating(false);
 			dbf.setFeature("http://xml.org/sax/features/namespaces", false);
 			dbf.setFeature("http://xml.org/sax/features/validation", false);
-			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
-			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
 			DocumentBuilder db = dbf.newDocumentBuilder();
 			XML = db.newDocument();
+
+			Element m = XML.createElement("m");
+			XML.appendChild(m);
+			Element rootElement = XML.getDocumentElement();
+
+			// 		<t>timeStamp</t>
+			Element t = XML.createElement("t");
+			t.appendChild (XML.createTextNode(timeStamp));
+			rootElement.appendChild(t);
+
+			// 		$this->XML->addChild('d', $this->driverAddr);
+			Element d = XML.createElement("d");
+			d.appendChild (XML.createTextNode(driverAddr));
+			rootElement.appendChild(d);
+
+			// 		$this->XML->addChild('d', $this->driverName);
+			Element ddn = XML.createElement("dn");
+			ddn.appendChild (XML.createTextNode(driverName));
+			rootElement.appendChild(ddn);
+
+			// 		$this->XML->addChild('r', $this->robotAddr);
+			Element r = XML.createElement("r");
+			r.appendChild (XML.createTextNode(robotAddr));
+			rootElement.appendChild(r);
+
+			// 		$this->XML->addChild('c', $this->commandChar);
+			Element c = XML.createElement("c");
+			c.appendChild (XML.createTextNode(commandChar));
+			rootElement.appendChild(c);
+
+			// 		$this->XML->addChild('a', $this->commandArguments);
+			Element a = XML.createElement("a");
+			a.appendChild (XML.createTextNode(commandArguments));
+			rootElement.appendChild(a);
+
+
+			// 		$this->XML->addChild('co', $this->comment);
+			Element cm = XML.createElement("co");
+			cm.appendChild (XML.createTextNode(comment));
+			rootElement.appendChild(cm);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-		Element m = XML.createElement("m");
-		XML.appendChild(m);
-		Element rootElement = XML.getDocumentElement();
-
-// 		<t>timeStamp</t>
-		Element t = XML.createElement("t");
-		t.appendChild (XML.createTextNode(timeStamp));
-		rootElement.appendChild(t);
-
-// 		$this->XML->addChild('d', $this->driverAddr);
-		Element d = XML.createElement("d");
-		d.appendChild (XML.createTextNode(driverAddr));
-		rootElement.appendChild(d);
-
-// 		$this->XML->addChild('d', $this->driverName);
-		Element ddn = XML.createElement("dn");
-		ddn.appendChild (XML.createTextNode(driverName));
-		rootElement.appendChild(ddn);
-
-// 		$this->XML->addChild('r', $this->robotAddr);
-		Element r = XML.createElement("r");
-		r.appendChild (XML.createTextNode(robotAddr));
-		rootElement.appendChild(r);
-
-// 		$this->XML->addChild('c', $this->commandChar);
-		Element c = XML.createElement("c");
-		c.appendChild (XML.createTextNode(commandChar));
-		rootElement.appendChild(c);
-
-// 		$this->XML->addChild('a', $this->commandArguments);
-		Element a = XML.createElement("a");
-		a.appendChild (XML.createTextNode(commandArguments));
-		rootElement.appendChild(a);
-
-
-// 		$this->XML->addChild('co', $this->comment);
-		Element cm = XML.createElement("co");
-		cm.appendChild (XML.createTextNode(comment));
-		rootElement.appendChild(cm);
 		try
 		{
 			DOMSource source = new DOMSource(XML);
