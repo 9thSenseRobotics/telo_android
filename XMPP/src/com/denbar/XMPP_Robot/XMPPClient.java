@@ -75,10 +75,10 @@ public class XMPPClient extends Activity {
         editBluetooth.setText(bluetooth);
         editRecipient.setText(recipient);
         editMessages.setText("Received messages and status are displayed here");
-        editSend.setText("Enter text here that you want to send");
+        //editSend.setText("Enter text here that you want to send");
 
         // Set a button listener to update entries and to login
-        Button setup = (Button) this.findViewById(R.id.OK);
+        Button setup = (Button) this.findViewById(R.id.connect);
         setup.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
             	robotName = editRobotName.getText().toString();

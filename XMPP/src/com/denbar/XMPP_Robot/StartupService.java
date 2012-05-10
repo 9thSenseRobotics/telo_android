@@ -9,7 +9,7 @@ import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.util.StringUtils;
+//import org.jivesoftware.smack.util.StringUtils;
 
 import android.app.Service;
 import android.content.Intent;
@@ -28,7 +28,7 @@ public class StartupService extends Service {
 	//public static final String ROBOT_COMMAND_INTENT = "com.denbar.action.ROBOT_COMMMAND";
     private Handler mHandler = new Handler();
     private XMPPConnection connection;
-    private String robotName, host, port, service, forwardToAddress, userid, password, bluetooth, recipient;
+    private String robotName, host, port, service, forwardToAddress, userid, password, bluetooth, recipient, robotCommand, robotArguments;
     private int portNumber;
 
 	@Override
@@ -48,9 +48,11 @@ public class StartupService extends Service {
         service = prefs.getString("service",robotResources.getString(R.string.service));
         userid = prefs.getString("userid",robotResources.getString(R.string.userid));
         password = prefs.getString("password",robotResources.getString(R.string.password));
-        bluetooth = prefs.getString("bluetooth",robotResources.getString(R.string.bluetooth));
+        bluetooth = prefs.getString("bluetooth",robotResources.getString(R.string.bluetooth)).toUpperCase();
         recipient = prefs.getString("recipient",robotResources.getString(R.string.recipient));
-
+        
+        Toast.makeText(this, "Host " + host, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Port " + port, Toast.LENGTH_SHORT).show();
         forwardToAddress = robotResources.getString(R.string.forwardToAddress);
 
     	if (EntriesTest())
@@ -142,7 +144,8 @@ public class StartupService extends Service {
 	        Presence presence = new Presence(Presence.Type.available);
 	        connection.sendPacket(presence);
 	        setConnection(connection);
-	        Toast.makeText(this, "XMPP Log in successful", Toast.LENGTH_SHORT).show();
+	        //
+	        Toast.makeText(this, "XMPP Log in successful", Toast.LENGTH_LONG).show();
 	    } catch (XMPPException ex) {
 	        Log.e("XMPPClient", "[SettingsDialog] Failed to log in as " + userid);
 	        Log.e("XMPPClient", ex.toString());
@@ -151,7 +154,7 @@ public class StartupService extends Service {
         	Intent XMPPClientIntent = new Intent(this, XMPPClient.class);
         	startActivity(XMPPClientIntent);
 	    }
-
+	    sendDataToServer("<m><re>1.0</re></m>");
 /*
 		Intent intentRetry = new Intent("com.denbar.XMPP_Robot.RETRY");
 
@@ -170,34 +173,40 @@ public class StartupService extends Service {
 	// so set up a packet listener
     public void setConnection(XMPPConnection connection)
     {
-        this.connection = connection;	// get the class variable assigned (used for sending as well as here)
-        if (connection != null) {
-            // Add a packet listener to get messages sent to us
+    	this.connection = connection;	// get the class variable assigned (used for sending as well as here)
+    	if (connection != null) {
+    		// Add a packet listener to get messages sent to us
     		PacketFilter filter = new MessageTypeFilter(Message.Type.chat);
-            connection.addPacketListener(new PacketListener() {
-                public void processPacket(Packet packet) {
-                    Message message = (Message) packet;
-                    if (message.getBody() != null) {
-                        String body = StringUtils.parseBareAddress(message.getBody());
-                        MessageToRobot  myMessage  = new MessageToRobot(message.getBody());
-	                    final String robotCommand = myMessage.commandChar;
-	                    final String robotArguments = myMessage.commandArguments;
-	                        mHandler.post(new Runnable() {
-	                           public void run() {
-	                        	   //broadcastIntent(payload);
-	                        	   if (robotArguments != null)
-	                        	   {
-	                        	       sendDataToAmarino(robotCommand + robotArguments);
-	                        	   } else {
-	                        	       sendDataToAmarino(robotCommand);
-	                        	   }
-	                            }
-	                        });
-                        //}
-                    }
-                }
-            }, filter);
-        }
+    		connection.addPacketListener(new PacketListener() {
+    			public void processPacket(Packet packet) {
+    				Message message = (Message) packet;
+    				if (message.getBody() != null) {
+    					String body = message.getBody();
+    					if (body.contains("<"))
+    					{
+    						MessageToRobot  myMessage  = new MessageToRobot(message.getBody());
+    						robotCommand = myMessage.commandChar;
+    						robotArguments = myMessage.commandArguments;
+    					} else {
+    						robotCommand = body;
+    						robotArguments = null;
+    					}
+    					mHandler.post(new Runnable() {
+    						public void run() {
+    							//broadcastIntent(payload);
+    							if (robotArguments != null)
+    							{
+    								sendDataToAmarino(robotCommand + robotArguments);
+    							} else {
+    								sendDataToAmarino(robotCommand);
+    							}
+    						}
+    					});
+    					//}
+    				}
+    			}
+    		}, filter);
+    	}
     }
 
 	private void sendDataToServer(String data)
@@ -248,7 +257,7 @@ public class StartupService extends Service {
     	if ( !host.contains(".")) return false;
     	if ( !service.contains(".")) return false;
     	if ( userid.contains("@")) return false;
-    	if ( !bluetooth.contains(":")) return false;
+    	if ( !bluetooth.matches("[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]")) return false;
     	return true;
 	}
 
