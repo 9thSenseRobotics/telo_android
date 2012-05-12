@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		android:orientation="horizontal"
+		android:layout_width="fill_parent"
+		android:layout_height="30dp"
+            >
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Name:"
+                android:minWidth="100dp"
+                />
+
+        <EditText
+            android:id="@+id/robotname"
+            android:layout_width="199dp"
+            android:layout_height="match_parent"
+            android:autoText="false"
+            android:capitalize="none"
+            android:minWidth="150dp"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:textSize="11sp" />
+
+	</LinearLayout>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		android:orientation="horizontal"
+		android:layout_width="fill_parent"
+		android:layout_height="30dp"
+            >
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="XMPP:"
+                android:minWidth="100dp"
+                />
+
+        <EditText
+            android:id="@+id/XMPPstatus"
+            android:layout_width="199dp"
+            android:layout_height="match_parent"
+            android:autoText="false"
+            android:capitalize="none"
+            android:minWidth="150dp"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:textSize="11sp" />
+
+     </LinearLayout>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		android:orientation="horizontal"
+		android:layout_width="fill_parent"
+		android:layout_height="30dp"
+            >
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Bluetooth:"
+                android:minWidth="100dp"
+                />
+
+        <EditText
+            android:id="@+id/bluetoothStatus"
+            android:layout_width="199dp"
+            android:layout_height="match_parent"
+            android:autoText="false"
+            android:capitalize="none"
+            android:minWidth="150dp"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:textSize="11sp" />
+
+     </LinearLayout>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		android:orientation="horizontal"
+		android:layout_width="fill_parent"
+		android:layout_height="30dp"
+            >
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Status:"
+                android:minWidth="100dp"
+                />
+
+        <EditText
+            android:id="@+id/status"
+            android:layout_width="199dp"
+            android:layout_height="match_parent"
+            android:autoText="false"
+            android:capitalize="none"
+            android:minWidth="150dp"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:textSize="11sp" />
+
+     </LinearLayout>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		android:orientation="horizontal"
+		android:layout_width="fill_parent"
+		android:layout_height="30dp"
+            >
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Received:"
+                android:minWidth="100dp"
+                />
+
+        <EditText
+            android:id="@+id/received"
+            android:layout_width="199dp"
+            android:layout_height="match_parent"
+            android:autoText="false"
+            android:capitalize="none"
+            android:minWidth="150dp"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:textSize="11sp" />
+
+     </LinearLayout>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		android:orientation="horizontal"
+		android:layout_width="fill_parent"
+		android:layout_height="30dp"
+            >
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Sent:"
+                android:minWidth="100dp"
+                />
+
+        <EditText
+            android:id="@+id/sent"
+            android:layout_width="199dp"
+            android:layout_height="match_parent"
+            android:autoText="false"
+            android:capitalize="none"
+            android:minWidth="150dp"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:textSize="11sp" />
+
+     </LinearLayout>
+
+    <EditText
+        android:id="@+id/sendText"
+        android:layout_width="fill_parent"
+        android:layout_height="30dp"
+        android:autoText="false"
+        android:capitalize="none"
+        android:scrollHorizontally="true"
+        android:singleLine="true"
+        android:textSize="11sp" />
+
+    <Button android:id="@+id/send"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:text="Send">
+    </Button>
+
+    <Button android:id="@+id/Connect"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:text="Connect">
+    </Button>
+
+</LinearLayout>
