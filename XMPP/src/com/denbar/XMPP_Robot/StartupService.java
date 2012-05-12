@@ -142,6 +142,7 @@ public class StartupService extends Service {
 
 	        // Set the status to available
 	        Presence presence = new Presence(Presence.Type.available);
+	        presence.setStatus("Robot v1.0");
 	        connection.sendPacket(presence);
 	        setConnection(connection);
 	        //
