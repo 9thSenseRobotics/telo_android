@@ -1,5 +1,7 @@
 package com.denbar.RobotComm;
 
+import java.util.UUID;
+
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPConnection;
@@ -30,6 +32,9 @@ public class RobotCommService extends Service {
     private String host, port, service;
     private String robotCommand, robotArguments, userid, password, bluetooth, recipient;
     private int portNumber;
+    //private UUID uuid = UUID.fromString("a60f35f0-b93a-11de-8a39-08002009c666");
+	// UUID generated at http://www.famkruithof.net/uuid/uuidgen
+	private UUID uuid = UUID.fromString("8497ed50-9cad-11e1-a8b0-0800200c9a66");
 
 	@Override
 	public void onCreate() {
