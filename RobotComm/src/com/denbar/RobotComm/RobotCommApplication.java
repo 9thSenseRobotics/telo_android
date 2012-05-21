@@ -8,7 +8,7 @@ public class RobotCommApplication extends Application {
 
     // global variables
     //private String _robotName, _host, _port, _service, _userid, _password, _bluetooth, _recipient;
-    private boolean _bluetoothConnected;
+    private boolean _bluetoothConnected, _tabletBluetoothStatus;
     private String _bluetoothAddress;
     private int _bluetoothAttemptsCounter;
 
@@ -60,6 +60,16 @@ public class RobotCommApplication extends Application {
     public void incrementBluetoothAttemptsCounter()
     {
     	_bluetoothAttemptsCounter++;
+    }
+
+    public void setTabletBluetoothStatus(boolean value)
+    {
+    	_tabletBluetoothStatus = value;
+    }
+
+    public boolean getTabletBluetoothStatus()
+    {
+    	return _tabletBluetoothStatus;
     }
 
 }

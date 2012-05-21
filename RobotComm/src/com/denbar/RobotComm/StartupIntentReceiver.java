@@ -14,7 +14,7 @@ public class StartupIntentReceiver extends BroadcastReceiver{
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		Intent serviceIntent = new Intent();
-		serviceIntent.setAction("com.denbar.XMPP_Robot.StartupService");
+		serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
 
 		// start up the service that does registration
 		context.startService(serviceIntent);

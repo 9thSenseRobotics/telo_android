@@ -18,6 +18,46 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service android:enabled = "true" android:name=".RobotCommService"
+             android:label="RobotCommService">
+            <intent-filter>
+				<action	android:name="com.denbar.RobotComm.RobotCommService" />
+		    </intent-filter>
+        </service>
+
+        <!--  callback for boot completed, note that you need the permission here as well
+        to know when boot is finished -->
+        <receiver
+            android:enabled="true"
+            android:name=".StartupIntentReceiver"
+            android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
+			<intent-filter>
+				<action	android:name="android.intent.action.BOOT_COMPLETED" />
+				<category android:name="android.intent.category.HOME" />
+			</intent-filter>
+		</receiver>
+
+        <receiver android:name=".RobotCommWidget" >
+            <intent-filter >
+                <action
+                    android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info" />
+        </receiver>
+
+		<service android:name=".UpdateWidgetService">
+
+		</service>
+
     </application>
 
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.BLUETOOTH"/>
+  <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+
 </manifest>
+

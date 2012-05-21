@@ -62,7 +62,7 @@ package com.denbar.RobotComm;
 //package java_xml_library;
 
 
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
 
 public class RobotMessages
 {

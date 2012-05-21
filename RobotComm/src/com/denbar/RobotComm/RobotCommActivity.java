@@ -1,6 +1,7 @@
 package com.denbar.RobotComm;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -22,7 +23,7 @@ public class RobotCommActivity extends Activity {
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-        Toast.makeText(this, "client created", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "RobotComm activity created", Toast.LENGTH_SHORT).show();
 
 
         Log.i("RobotComm", "onCreate called");
@@ -71,13 +72,13 @@ public class RobotCommActivity extends Activity {
 
         // display the values for the user:
         editRobotName.setText(robotName);
-        editHost.setText(host);
-        editPort.setText(port);
-        editService.setText(service);
-        editUserID.setText(userid);
-        editPassword.setText(password);
-        editBluetooth.setText(bluetooth);
-        editRecipient.setText(recipient);
+        //editHost.setText(host);
+        //editPort.setText(port);
+        //editService.setText(service);
+        //editUserID.setText(userid);
+        //editPassword.setText(password);
+        //editBluetooth.setText(bluetooth);
+        //editRecipient.setText(recipient);
         editSend.setText("Enter text here that you want to send");
         editXMPPstatus.setText("not connected yet");
         editBluetoothStatus.setText("not connected yet");
@@ -134,10 +135,22 @@ public class RobotCommActivity extends Activity {
         	    String text = editSend.getText().toString();
         		Intent serviceIntent = new Intent();
         		serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
-        		serviceIntent.putExtra("message", text);
+        		serviceIntent.putExtra("messageToServer", text);
         		startService(serviceIntent);
         		editSend.setText("");
         		editSent.setText(text);
+            }
+        });
+
+        // Set a button listener to connect to bluetooth and servers
+        Button Connect = (Button) this.findViewById(R.id.Connect);
+        Connect.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+        		Intent serviceIntent = new Intent();
+        		serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
+        		serviceIntent.putExtra("Connect", bluetooth);
+        		startService(serviceIntent);
+        		editStatus.setText("Connecting to bluetooth and servers");
             }
         });
     }	// ends on Create
@@ -146,7 +159,7 @@ public class RobotCommActivity extends Activity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		Toast.makeText(this, "client started", Toast.LENGTH_SHORT).show();
+		Toast.makeText(this, "RobotComm activty started", Toast.LENGTH_SHORT).show();
     	EntriesTest();
 	}
 
@@ -180,7 +193,7 @@ public class RobotCommActivity extends Activity {
     		message += "userid,";
         		returnResult = false;
     	}
-    	if ( (!bluetooth.contains(":")) || (!(bluetooth.length() == 17)))
+    	if (!BluetoothAdapter.checkBluetoothAddress(bluetooth))
     	{
     		message += "bluetooth ";
         	returnResult = false;

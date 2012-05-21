@@ -1,9 +1,8 @@
 package com.denbar.RobotComm;
 
 //package java_xml_library;
-import java.text.NumberFormat;
-
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 public class MicroTime
 {
