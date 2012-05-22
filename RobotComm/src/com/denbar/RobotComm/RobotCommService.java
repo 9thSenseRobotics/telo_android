@@ -15,7 +15,6 @@ import android.content.res.Resources;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -25,12 +24,12 @@ public class RobotCommService extends Service {
 	private Handler _Handler = new Handler();
 	private XMPPConnection _connection;
 	private String _robotCommand, _robotArguments;
-	private String host, port, service, robotName;
-	private String userid, password, bluetooth, recipient;
+	private String host, port, service;
+	private String robotName, userid, password, bluetooth, recipient;
 	private int portNumber;
 	private arduinoBT BT;
 	private XMPP xmpp;
-	public String _bluetoothStatus = "Not connected", _XMPPstatus = "Not Connected";
+	public String _bluetoothStatus = "Not connected yet", _XMPPstatus = "Not Connected Yet";
 	public String _messageReceivedFromRobot = "", _messageSentToRobot = "";
 	public String _messageSentToServer = "", _messageReceivedFromServer = "";
 	public String _robotStatus = "";
@@ -39,6 +38,7 @@ public class RobotCommService extends Service {
 	public void onCreate() {
 		super.onCreate();
 		Toast.makeText(this, "RobotCommService created", Toast.LENGTH_SHORT).show();
+		updateWidget();
 
 		BT = new arduinoBT(this);
 		xmpp = new XMPP(this);
@@ -121,12 +121,14 @@ public class RobotCommService extends Service {
 		BT.setBTaddress(bluetoothAddress);
 		if (BT.Connect()) {
 			_bluetoothStatus = "Connected";
+			updateWidget();
 			Log.d("RobotCommService", "Bluetooth connected");
 			Toast.makeText(this, "Bluetooth connected", Toast.LENGTH_SHORT).show();
 		}
 		else {
 			Toast.makeText(this, "Bluetooth connection failed, opening RobotCommActivity", Toast.LENGTH_LONG).show();
 			_bluetoothStatus = "Connection failed";
+			updateWidget();
 			Intent RobotCommIntent = new Intent(this, RobotCommActivity.class);
 			RobotCommIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			startActivity(RobotCommIntent);
@@ -136,6 +138,8 @@ public class RobotCommService extends Service {
 	public void connectXMPP()
 	{
 		if (xmpp.getConnectionState()) {
+			_XMPPstatus = "Connected";
+			updateWidget();
 			Log.d("RobotCommService", "XMPP connection requested, already connected");
 			return;
 		}
@@ -152,14 +156,17 @@ public class RobotCommService extends Service {
 			Toast.makeText(this, "XMPP connected", Toast.LENGTH_SHORT).show();
 			Log.d("RobotCommService", "XMPP connected");
 			_XMPPstatus = "Connected";
+			updateWidget();
 			setupPacketListener();
 		}
 		else {
 			Toast.makeText(this, "XMPP connection failed, opening RobotCommActivity", Toast.LENGTH_LONG).show();
 			Log.d("RobotCommService", "XMPP connection failed");
+			_XMPPstatus = "Not connected";
+			updateWidget();
 			_connection = null;
 			Intent RobotCommIntent = new Intent(this, RobotCommActivity.class);
-			//startActivity(RobotCommIntent);
+			startActivity(RobotCommIntent);
 		}
 	}
 
@@ -173,6 +180,7 @@ public class RobotCommService extends Service {
 		if (xmpp.sendData(data))
 		{
 			_messageSentToServer = data;
+			updateWidget();
 			return true;
 		}
 		return false;
@@ -196,6 +204,7 @@ public class RobotCommService extends Service {
 			// with a string in "messageToServer"
 			if (BT.sendMessage(robotCommand)) {
 				_messageSentToRobot = robotCommand;
+				updateWidget();
 				return true;
 			}
 			else return false;
@@ -283,6 +292,18 @@ public class RobotCommService extends Service {
 				}
 			}
 		}, filter);
+	}
+
+	private void updateWidget()
+	{
+		// Build the intent to call the service
+		Intent intent = new Intent(this, UpdateWidgetService.class);
+		//intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, allWidgetIds);
+		intent.putExtra("XMPP", "XMPP Status: " + _XMPPstatus);
+		intent.putExtra("bluetooth", "Bluetooth Status: "  + _bluetoothStatus);
+		intent.putExtra("sentToServer", "Message Sent To Server: " + _messageSentToServer);
+		intent.putExtra("sentToRobot", "Message Sent To Robot: "+  _messageSentToRobot);
+		this.startService(intent);
 	}
 }
 

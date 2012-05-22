@@ -34,7 +34,8 @@ public class arduinoBT
 
 	public arduinoBT(Context CallingContext)
     {
-    	_context = CallingContext;
+//    	_context = CallingContext.getApplicationContext();
+		_context = CallingContext;
     	_BTaddress = "invalid address";	// just so it is not an empty string
     	_isConnected = false;
     }
