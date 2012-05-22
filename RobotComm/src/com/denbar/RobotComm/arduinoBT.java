@@ -340,7 +340,7 @@ public class arduinoBT
 											Log.d("ArduinoBT", "message from arduino: " + data);
 											Intent serviceIntent = new Intent();
 							        		serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
-							        		serviceIntent.putExtra("messageToServer", data);
+							        		serviceIntent.putExtra("messageFromRobot", data);
 							        		_context.startService(serviceIntent);
 										}
 									});
