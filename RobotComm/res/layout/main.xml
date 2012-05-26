@@ -62,6 +62,30 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:minWidth="100dp"
+            android:text="C2DM: " />
+
+        <EditText
+            android:id="@+id/C2DMstatus"
+            android:layout_width="199dp"
+            android:layout_height="match_parent"
+            android:autoText="false"
+            android:capitalize="none"
+            android:minWidth="150dp"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="30dp"
+        android:orientation="horizontal" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:minWidth="100dp"
             android:text="Bluetooth:" />
 
         <EditText
@@ -110,7 +134,7 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:minWidth="100dp"
-            android:text="Received from Robot:" />
+            android:text="From Robot:" />
 
         <EditText
             android:id="@+id/receivedFromRobot"
@@ -173,7 +197,7 @@
 
     <Button
         android:id="@+id/btnSendToRobot"
-        android:layout_width="150dp"
+        android:layout_width="120dp"
         android:layout_height="60dp"
         android:text="Send to Robot" >
     </Button>
@@ -188,7 +212,7 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:minWidth="100dp"
-            android:text="Received from Server:" />
+            android:text="From Server:" />
 
         <EditText
             android:id="@+id/receivedFromServer"
@@ -249,25 +273,32 @@
             android:textSize="11sp" />
     </LinearLayout>
 
-    <Button
-        android:id="@+id/btnSendToServer"
-        android:layout_width="150dp"
-        android:layout_height="60dp"
-        android:text="Send to Server" >
-    </Button>
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="70dp"
+        android:orientation="horizontal" >
 
-    <Button
-        android:id="@+id/Settings"
-        android:layout_width="100dp"
-        android:layout_height="60dp"
-        android:text="Settings" >
-    </Button>
+        <Button
+            android:id="@+id/btnSendToServer"
+            android:layout_width="120dp"
+            android:layout_height="60dp"
+            android:text="Send to Server" >
+        </Button>
 
-    <Button
-        android:id="@+id/Connect"
-        android:layout_width="100dp"
-        android:layout_height="60dp"
-        android:text="Connect" >
-    </Button>
+        <Button
+            android:id="@+id/Settings"
+            android:layout_width="100dp"
+            android:layout_height="60dp"
+            android:text="Settings" >
+        </Button>
+
+        <Button
+            android:id="@+id/Connect"
+            android:layout_width="100dp"
+            android:layout_height="60dp"
+            android:text="Connect" >
+        </Button>
+    </LinearLayout>
 
 </LinearLayout>

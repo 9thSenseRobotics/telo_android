@@ -1,17 +1,12 @@
 package com.denbar.RobotComm;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
-import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.filter.MessageTypeFilter;
-import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
@@ -24,7 +19,7 @@ public class XMPP
     private Handler _Handler;
     private XMPPConnection _connection;
     private String _robotCommand, _robotArguments;
-    private String _host, _service, _userid, _password, _recipient;
+    private String _host, _service, _userid, _password, _recipient, _recipientForEcho;
     private int _portNumber;
 
 
@@ -37,7 +32,8 @@ public class XMPP
     	_connection = null;
     }
 
-	public void setCommParameters(String host, int portNumber, String service, String userid, String password, String recipient )
+	public void setCommParameters(String host, int portNumber, String service,
+			String userid, String password, String recipient, String recipientForEcho )
 	{
 		_host = host;
 		_portNumber = portNumber;
@@ -45,6 +41,7 @@ public class XMPP
 		_userid = userid;
 		_password = password;
 		_recipient = recipient;
+		_recipientForEcho = recipientForEcho;
 		_commParametersSet = true;
 	}
 
@@ -150,14 +147,36 @@ public class XMPP
 		}, filter);
     }
 */
-    public boolean sendData(String data)
+    public boolean sendCommandEchoFromArduino(String data)
     {
         if (_connection == null) {
         	Log.d("XMPP", "tried to send XMPP message when not connected");
         	return false;
         }
-        MessageFromRobot responseMessage = new MessageFromRobot("driverAddr", "robotAddr", "Response is " + data);
-        Log.i("XMPPClient", "Sending text [" + data + "] to [" + _recipient + "]");
+        //MessageFromRobot responseMessage = new MessageFromRobot("driverAddr", "r", "Response is " + data);
+        MessageFromRobot responseMessage = new MessageFromRobot(_recipientForEcho, _userid + "@9thsense.com", data);
+        Log.i("XMPPClient", "Sending text [" + data + "] to [" + _recipientForEcho + "]");
+    	Message msg = new Message(_recipientForEcho, Message.Type.chat);
+    	msg.setBody(responseMessage.XMLStr);
+    	try {
+    		_connection.sendPacket(msg);
+    	}
+    	catch(Exception e){
+    		Log.d("XMPP", "exception from sendData: " + e.getMessage());
+    		return false;
+    	}
+    	return true;
+    }
+
+    public boolean sendMessage(String data, String responseValue)
+    {
+        if (_connection == null) {
+        	Log.d("XMPP", "tried to send XMPP message when not connected");
+        	return false;
+        }
+        //MessageFromRobot responseMessage = new MessageFromRobot("driverAddr", "r", "Response is " + data);
+        MessageFromRobot responseMessage = new MessageFromRobot(_recipient, _userid + "@9thsense.com", responseValue); //, data);
+        Log.i("XMPPClient", "Sending text [ responseValue + data ] to [" + _recipient + "]");
     	Message msg = new Message(_recipient, Message.Type.chat);
     	msg.setBody(responseMessage.XMLStr);
     	try {

@@ -13,11 +13,7 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -25,13 +21,17 @@ import android.widget.Toast;
 
 public class RobotCommActivity extends Activity {
 
-    private EditText editReceivedFromServer, editReceivedFromRobot;
+	private static final String LOG = "RobotCommActivity";
+	public final static String AUTH_C2DM = "authentication";
+	public final static String REGISTERED_C2DM = "registered";
+
+	private EditText editReceivedFromServer, editReceivedFromRobot;
     private EditText editSendToRobot, editSentToRobot, editSendToServer, editSentToServer;
-    private EditText editHost, editPort, editUserID, editService, editPassword, editBluetooth;
-    private EditText editRecipient, editRobotName;
-    private EditText editXMPPstatus, editBluetoothStatus, editStatus;
-    private String robotName, host, port, service, userid, password, bluetooth, recipient;
-    private static final int timerUpdateRate = 5000;
+    //private EditText editHost, editPort, editUserID, editService, editPassword, editBluetooth, editRecipient;
+    private EditText editRobotName;
+    private EditText editXMPPstatus, editC2DMstatus, editBluetoothStatus, editStatus;
+    private String robotName, host, port, service, userid, password, bluetooth, recipient, recipientForEcho;
+    private static final int timerUpdateRate = 500;
 	private Timer checkStateTimer;
 	private GUItimer MyGUItimer;
 	private Context _context;
@@ -39,18 +39,23 @@ public class RobotCommActivity extends Activity {
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
+        Log.d(LOG, "in onCreate");
         Toast.makeText(this, "RobotComm activity created", Toast.LENGTH_SHORT).show();
+
+    	Intent bindIntent = new Intent(com.denbar.RobotComm.RobotCommActivity.this, com.denbar.RobotComm.RobotCommService.class);
+		bindService(bindIntent, serviceConnection,Context.BIND_AUTO_CREATE);
+	    Log.d(LOG, "Binding to service.");
 
 		checkStateTimer = new Timer("checkState");	// setup timer
 		MyGUItimer = new GUItimer();
 
 		_context = this;
 
-        Log.i("RobotComm", "onCreate called");
         setContentView(R.layout.main);
 
         editRobotName = (EditText) findViewById(R.id.robotname);
         editXMPPstatus = (EditText) findViewById(R.id.XMPPstatus);
+        editC2DMstatus = (EditText) findViewById(R.id.C2DMstatus);
         editBluetoothStatus = (EditText) findViewById(R.id.bluetoothStatus);
         editStatus = (EditText) findViewById(R.id.status);
         editReceivedFromRobot = (EditText) findViewById(R.id.receivedFromRobot);
@@ -66,11 +71,11 @@ public class RobotCommActivity extends Activity {
         sendToServer.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
         	    String text = editSendToServer.getText().toString();
-        	    if (serviceBinder.sendDataToXMPPserver(text)) {
+        	    if (serviceBinder.messageToServer(text, "a")) {	// in the future, this should not be "a", it should be "m" but this gets the response tested
         	    	editSentToServer.setText(text);
         	    	editSendToServer.setText("");
         	    }
-        	    else editSentToRobot.setText("Failed trying to send text to robot");
+        	    else editSentToServer.setText("Failed sending text to server");
             	//Intent serviceIntent = new Intent();
         		//serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
         		//serviceIntent.putExtra("messageToServer", text);
@@ -81,7 +86,7 @@ public class RobotCommActivity extends Activity {
         });
 
 
-        // Set a button listener to send a chat text message
+        // Set a button listener to send a command to the robot
         Button sendToRobot = (Button) this.findViewById(R.id.btnSendToRobot);
         sendToRobot.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
@@ -91,12 +96,6 @@ public class RobotCommActivity extends Activity {
         	    	editSendToRobot.setText("");
         	    }
         	    else editSentToRobot.setText("Failed trying to send text to robot");
-        		//Intent serviceIntent = new Intent();
-        		//serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
-        		//serviceIntent.putExtra("RobotCommand", text);
-        		//startService(serviceIntent);
-        		//editSendToRobot.setText("");
-        		//editSentToRobot.setText(text);
             }
         });
 
@@ -125,6 +124,14 @@ public class RobotCommActivity extends Activity {
 
     }	// ends on Create
 
+	@Override
+	protected void onStart() {
+		super.onStart();
+		Log.d(LOG, "in onStart");
+		Toast.makeText(this, "RobotComm activty started", Toast.LENGTH_SHORT).show();
+        getPreferences();
+	}
+
 
     // We will get the strings needed for logging in from a preferences file
     // that contains the last set used.
@@ -134,17 +141,21 @@ public class RobotCommActivity extends Activity {
 
     private void getPreferences()
     {
-        Resources robotResources = getResources();
+    	Log.d(LOG, "in getPreferences");
+    	Resources robotResources = getResources();
         SharedPreferences prefs = getSharedPreferences("RobotPreferences", MODE_WORLD_WRITEABLE );
 
         robotName = prefs.getString("robotname",robotResources.getString(R.string.robot_name));
+
         host = prefs.getString("host",robotResources.getString(R.string.host));
         port = prefs.getString("port",robotResources.getString(R.string.port));
         service = prefs.getString("service",robotResources.getString(R.string.service));
         userid = prefs.getString("userid",robotResources.getString(R.string.userid));
         password = prefs.getString("password",robotResources.getString(R.string.password));
         bluetooth = prefs.getString("bluetooth",robotResources.getString(R.string.bluetooth));
-        recipient = prefs.getString("recipient",robotResources.getString(R.string.recipient));
+        recipientForEcho = prefs.getString("recipient",robotResources.getString(R.string.sendCommandEchoServerAddress));
+        recipient = prefs.getString("recipientForEcho",robotResources.getString(R.string.sendMessageToXMPPserverAddress));
+
 
         // display status for the user:
 
@@ -158,39 +169,24 @@ public class RobotCommActivity extends Activity {
         editReceivedFromServer.setText("");
         editSentToRobot.setText("");
         editSendToServer.setText("");
-
-        if (!EntriesTest())
-        {
-
-        }
     }
-
-	@Override
-	protected void onStart() {
-		super.onStart();
-		Toast.makeText(this, "RobotComm activty started", Toast.LENGTH_SHORT).show();
-        getPreferences();
-		Connect();
-	}
 
 	private void Connect()
 	{
-    	if (EntriesTest()) {
+		Log.d(LOG, "in Connect");
+		if (EntriesTest()) {
     		editSendToServer.setText("");
     		editSendToRobot.setText("");
-        	editStatus.setText("Connecting to server.");
-    		Intent serviceIntent = new Intent();
-    		serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
-    		startService(serviceIntent);
-    		bindToService();
+        	editStatus.setText("Connecting to BT and servers.");
     		if (serviceBinder != null) {
-    			serviceBinder.connectBluetooth(bluetooth);
+    			serviceBinder.connectBluetooth(bluetooth); // this blocks until BT connects or times out
+    		//			// might want to run in Async
     			serviceBinder.connectXMPP();
+        		updateGUI();
     		} else {
 				editStatus.setText("Binding to server failed.");
-				Log.d(this.getClass().getName(), "Binding failed");
+				Log.d(LOG, "Binding failed");
     		}
-    		updateGUI();
 		} else {
         		editStatus.setText("Error in user entries, check setup parameters");
     	    	Intent startIntent = new Intent(this, com.denbar.RobotComm.credentialsActivity.class);
@@ -202,27 +198,20 @@ public class RobotCommActivity extends Activity {
 
 	private ServiceConnection serviceConnection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
+			Log.d(LOG, "in onServiceConnected");
 			serviceBinder = ((com.denbar.RobotComm.RobotCommService.MyBinder)service).getService();
 		}
 
 		public void onServiceDisconnected(ComponentName className) {
+			Log.d(LOG, "in onServiceDisconnected");
 			serviceBinder = null;
 		}
 	};
 
-	private void bindToService()
-	{
-	    if (serviceBinder == null){
-	    	Intent bindIntent = new Intent();
-	    	bindIntent = new Intent(com.denbar.RobotComm.RobotCommActivity.this, com.denbar.RobotComm.RobotCommService.class);
-			bindService(bindIntent, serviceConnection,Context.BIND_AUTO_CREATE);
-		    Log.d(this.getClass().getName(), "Binding to service.");
-	    }
-    }
-
 	private boolean EntriesTest()
 	{
-    	boolean returnResult = true;
+		Log.d(LOG, "in EntriesTest");
+		boolean returnResult = true;
     	String message = "There is a error in ";
     	try { int portNumber = Integer.parseInt(port); }
     	catch(NumberFormatException nfe)
@@ -233,6 +222,11 @@ public class RobotCommActivity extends Activity {
     	if ( (!recipient.contains("@")) || (!recipient.contains(".")))
     	{
     		message += "recipient, ";
+        	returnResult = false;
+    	}
+    	if ( (!recipientForEcho.contains("@")) || (!recipientForEcho.contains(".")))
+    	{
+    		message += "recipientForEcho, ";
         	returnResult = false;
     	}
     	if ( !host.contains("."))
@@ -262,7 +256,7 @@ public class RobotCommActivity extends Activity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		Log.d(this.getClass().getName(), "in onResume");
+		Log.d(LOG, "in onResume");
 		MyGUItimer.cancel();
 		MyGUItimer = new GUItimer();
 		checkStateTimer.scheduleAtFixedRate(MyGUItimer, 0, timerUpdateRate);
@@ -272,40 +266,25 @@ public class RobotCommActivity extends Activity {
 	@Override
 	public void onPause() {
 		super.onPause();
-		Log.d(this.getClass().getName(), "in onPause");
+		Log.d(LOG, "in onPause");
 		MyGUItimer.cancel();
 	}
 
 	@Override
 	public void onStop() {
 		super.onStop();
-		Log.d(this.getClass().getName(), "in onStop");
+		Log.d(LOG, "in onStop");
 		MyGUItimer.cancel();
-	    if (serviceConnection != null) {
-	        unbindService(serviceConnection);
-		    if (serviceBinder != null) serviceBinder._runningRobotCommActivity = false;
-	        Log.d(this.getClass().getName(), "Unbinding from service from onStop");
-	        serviceConnection = null;
-        }
 	}
 
 	@Override
 	protected void onDestroy() {
 	    super.onDestroy();
-	    Log.d(this.getClass().getName(), "in onDestroy");
+	    Log.d(LOG, "in onDestroy");
 	    MyGUItimer.cancel();
-	    if (serviceBinder != null) serviceBinder._runningRobotCommActivity = false;
-
-	    //unbind the service and null it out
-	    // this slows down the app when changing orientation, since it has to go through the whole process of unbinding,
-	    // shutting down the server, and starting it back up, however, if we don't do this, it tends to throw a memory leak
-	    // as the server has a binding to an activity that does not exist.
-	    // That may just be a debugger issue, since garbage collection will take care of the binding in due time
-	    // so perhaps it is better to allow the leak so that the performance is better.
-	    // For now, we'll keep this.
 	    if (serviceConnection != null) {
 	        unbindService(serviceConnection);
-	        Log.d(this.getClass().getName(), "Unbinding from service from onDestroy");
+	        Log.d(LOG, "Unbinding from service from onDestroy");
 	        serviceConnection = null;
         }
 	}
@@ -320,8 +299,11 @@ public class RobotCommActivity extends Activity {
 	private void updateGUI() {
 		runOnUiThread(new Runnable() {
 			public void run() {
-				if (serviceBinder == null) return;
-				serviceBinder._runningRobotCommActivity = true;
+				if (serviceBinder == null)
+				{
+					Log.d(LOG, "update GUI called when not bound");
+					return;
+				}
 		    	editBluetoothStatus.setText(serviceBinder._bluetoothStatus);
 		    	editXMPPstatus.setText(serviceBinder._XMPPstatus);
 		        editStatus.setText(serviceBinder._robotStatus);

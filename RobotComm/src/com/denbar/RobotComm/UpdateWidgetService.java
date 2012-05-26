@@ -5,10 +5,11 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.os.IBinder;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 public class UpdateWidgetService extends Service {
-	//private static final String LOG = "RobotCommWidget";
+	private static final String LOG = "UpdatewidgetService";
 	private String _XMPPstatus, _bluetoothStatus, _sentToRobot, _sentToServer;
 	private AppWidgetManager appWidgetManager;
 	private RemoteViews remoteViews;
@@ -17,6 +18,7 @@ public class UpdateWidgetService extends Service {
 	public void onCreate()
 	{
 		super.onCreate();
+		Log.d(LOG, "in onCreate");
 		appWidgetManager = AppWidgetManager.getInstance(this.getApplicationContext());
 		remoteViews = new RemoteViews(this.getApplicationContext().getPackageName(), R.layout.widget_layout);
 
