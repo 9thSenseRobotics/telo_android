@@ -7,18 +7,15 @@ import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
 
 import android.content.Context;
-import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
 public class XMPP
 {
-	private boolean _isConnected, _commParametersSet;
-	private String _address;
+	private static final String LOG = "XMPP";
+	private boolean _commParametersSet;
 	private Context _context;
-    private Handler _Handler;
     private XMPPConnection _connection;
-    private String _robotCommand, _robotArguments;
     private String _host, _service, _userid, _password, _recipient, _recipientForEcho;
     private int _portNumber;
 
@@ -26,9 +23,7 @@ public class XMPP
 	public XMPP(Context CallingContext)
     {
     	_context = CallingContext;
-    	_isConnected = false;
     	_commParametersSet = false;
-    	_Handler = new Handler();
     	_connection = null;
     }
 
@@ -50,34 +45,32 @@ public class XMPP
     {
         if (_connection != null)
         {
-        	Log.d("XMPP", "tried to connect when already connected");
+        	Log.d(LOG, "tried to connect when already connected");
         	return false; // already connected
         }
-        // we need to find out how to detect if we lost the connection
-        // some kind of heartbeat
     	if (!_commParametersSet)
     	{
-    		Log.d("XMPP", "tried to connect without setting comm Parameters");
+    		Log.d(LOG, "tried to connect without setting comm Parameters");
     		return false;
     	} else
     	{
-    		Log.d("XMPP","XMPP parameters:" + _host + " " + _portNumber + " " + _service + " " + _userid + " " + _password);
+    		Log.d(LOG,"XMPP parameters:" + _host + " " + _portNumber + " " + _service + " " + _userid + " " + _password);
     	}
         ConnectionConfiguration connConfig = new ConnectionConfiguration(_host, _portNumber, _service);
         connConfig.setSASLAuthenticationEnabled(false);
 	    XMPPConnection connection = new XMPPConnection(connConfig);
 	    try {
 	        connection.connect();
-	        Log.i("XMPPClient", "[SettingsDialog] Connected to " + connection.getHost());
+	        Log.i(LOG, "[SettingsDialog] Connected to " + connection.getHost());
 	    } catch (XMPPException ex) {
-	        Log.e("XMPPClient", "[SettingsDialog] Failed to connect to " + connection.getHost());
-	        Log.e("XMPPClient", ex.toString());
-	        //_context.Toast.makeText(this, "XMPP Server connection failed", Toast.LENGTH_SHORT).show();
+	        Log.e(LOG, "[SettingsDialog] Failed to connect to " + connection.getHost());
+	        Log.e(LOG, ex.toString());
+	        Toast.makeText(_context, "XMPP Server connection failed", Toast.LENGTH_SHORT).show();
 	        return false;
 	    }
 	    try {
 	        connection.login(_userid,_password);
-	        Log.i("XMPPClient", "Logged in as " + connection.getUser());
+	        Log.i(LOG, "Logged in as " + connection.getUser());
 
 	        // Set the status to available
 	        Presence presence = new Presence(Presence.Type.available);
@@ -89,12 +82,23 @@ public class XMPP
 	        //setupPacketListener();
 	        return true;
 	    } catch (XMPPException ex) {
-	        Log.e("XMPPClient", "[SettingsDialog] Failed to log in as " + _userid);
-	        Log.e("XMPPClient", ex.toString());
+	    	Toast.makeText(_context, "XMPP Server login failed", Toast.LENGTH_SHORT).show();
+	    	Log.e(LOG, "[SettingsDialog] Failed to log in as " + _userid);
+	        Log.e(LOG, ex.toString());
 	        _connection = null;
 	        return false;
 	    }
 	}
+
+    public void resetConnection()
+    {
+    	if (_connection != null)
+    	{
+    	        _connection.disconnect();
+    	        Log.d(LOG, "trying to disconnect from XMPP server");
+    	}
+    	_connection = null;
+    }
 
     public XMPPConnection getXMPPConnection()
     {
@@ -107,7 +111,7 @@ public class XMPP
     private void setupPacketListener()
     {
     	if (_connection == null) {
-    		 Log.d("XMPP", "tried to setup packetListener with no connectoin present");
+    		 Log.d(LOG, "tried to setup packetListener with no connectoin present");
     		 return;
     	}
 		// Add a packet listener to get messages sent to us
@@ -147,43 +151,47 @@ public class XMPP
 		}, filter);
     }
 */
+
+    // echos the command that the server sent, as the echo comes back from the arduino
+    // the server ignores the content of the data, it is just as a heartbeat and for latency
     public boolean sendCommandEchoFromArduino(String data)
     {
         if (_connection == null) {
-        	Log.d("XMPP", "tried to send XMPP message when not connected");
+        	Log.d(LOG, "tried to send XMPP message when not connected");
         	return false;
         }
-        //MessageFromRobot responseMessage = new MessageFromRobot("driverAddr", "r", "Response is " + data);
         MessageFromRobot responseMessage = new MessageFromRobot(_recipientForEcho, _userid + "@9thsense.com", data);
-        Log.i("XMPPClient", "Sending text [" + data + "] to [" + _recipientForEcho + "]");
+        Log.i(LOG, "Sending text [" + data + "] to [" + _recipientForEcho + "]");
     	Message msg = new Message(_recipientForEcho, Message.Type.chat);
     	msg.setBody(responseMessage.XMLStr);
     	try {
     		_connection.sendPacket(msg);
     	}
     	catch(Exception e){
-    		Log.d("XMPP", "exception from sendData: " + e.getMessage());
+    		Log.d(LOG, "exception from sendData: " + e.getMessage());
     		return false;
     	}
     	return true;
     }
 
+    // sendMessage sends a string to the server.
+    // if responseValue == "a" then the string is ignored and the server returns an acknowledgement "!alive"
+    // if responseValue == "m" then the string is used by the server to display to the user or something
     public boolean sendMessage(String data, String responseValue)
     {
         if (_connection == null) {
-        	Log.d("XMPP", "tried to send XMPP message when not connected");
+        	Log.d(LOG, "tried to send XMPP message when not connected");
         	return false;
         }
-        //MessageFromRobot responseMessage = new MessageFromRobot("driverAddr", "r", "Response is " + data);
         MessageFromRobot responseMessage = new MessageFromRobot(_recipient, _userid + "@9thsense.com", responseValue); //, data);
-        Log.i("XMPPClient", "Sending text [ responseValue + data ] to [" + _recipient + "]");
+        Log.i(LOG, "Sending text [ responseValue + data ] to [" + _recipient + "]");
     	Message msg = new Message(_recipient, Message.Type.chat);
     	msg.setBody(responseMessage.XMLStr);
     	try {
     		_connection.sendPacket(msg);
     	}
     	catch(Exception e){
-    		Log.d("XMPP", "exception from sendData: " + e.getMessage());
+    		Log.d(LOG, "exception from sendData: " + e.getMessage());
     		return false;
     	}
     	return true;
@@ -194,6 +202,4 @@ public class XMPP
 		if (_connection == null) return false;
 		else return true;
 	}
-
-
 }

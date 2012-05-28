@@ -29,9 +29,9 @@ public class RobotCommService extends Service {
 	private static final String LOG = "RobotCommService";
 	private Handler _Handler = new Handler();
 	private XMPPConnection _connection;
-	private String _robotCommand, _robotArguments;
+	private String _robotCommand;
 	private String host, port, service;
-	private String robotName, userid, password, bluetooth, recipient, recipientForEcho;
+	private String userid, password, bluetooth, recipient, recipientForEcho;
 	private int portNumber;
 	private arduinoBT BT;
 	private XMPP xmpp;
@@ -44,6 +44,7 @@ public class RobotCommService extends Service {
 	public long _latencyXMPP = 0, _echoReceivedTimeXMPP,_echoSentTimeServer;
 	public long _latencyC2DM = 0, _echoReceivedTimeC2DM;
 	public long _latencyBT= 0, _echoReceviedTimeBT, _echoSentTimeBT;
+	private long _timeBTconnectionLost, _timeXMPPconnectionLost, _timeC2DMconnectionLost;
 	private boolean _echoReceivedBT = false, _echoReceivedXMPP = false, _echoReceivedC2DM = false;
 	private double TIME_OUT_ARDUINO = 30000, TIME_OUT_XMPP = 30000, TIME_OUT_C2DM = 30000;
 	private static final long timerUpdateRate = 9000;
@@ -94,7 +95,6 @@ public class RobotCommService extends Service {
 	{
 		Resources robotResources = getResources();
 		SharedPreferences prefs = getSharedPreferences("RobotPreferences", MODE_WORLD_WRITEABLE );
-		robotName = prefs.getString("robotName",robotResources.getString(R.string.robot_name));
 		host = prefs.getString("host",robotResources.getString(R.string.host));
 		port = prefs.getString("port",robotResources.getString(R.string.port));
 		service = prefs.getString("service",robotResources.getString(R.string.service));
@@ -224,6 +224,7 @@ public class RobotCommService extends Service {
 				_echoReceivedBT = false;
 				_bluetoothStatus = "Hardware problem, check power";
 				_robotStatus = "Not operating";
+				_timeBTconnectionLost = System.currentTimeMillis(); // we will set up an alarm to periodically retry
 			}
 		}
 	}
@@ -231,19 +232,49 @@ public class RobotCommService extends Service {
 	private void tryResetXMPP()
 	{
 		Log.d(LOG, "in tryResetXMPP");
-		//_XMPPproblem = true;
-		//_commFlagXMPP = false;
-		_XMPPstatus = "XMPP lost";
-		//_robotStatus = "Not operating";
+		_XMPPstatus = "resetting XMPP";
+		if (xmpp == null) xmpp = new XMPP(this);
+		if (xmpp.getConnectionState()) xmpp.resetConnection();
+		if (connectXMPP())
+		{
+			Log.d(LOG, "reconnected to XMPP server");
+			_lastXMPPreceivedTime = System.currentTimeMillis(); // give it some time to settle down before testing it
+			Log.d(LOG, "_lastXMPPreceivedTime set in tryResetXMPP");
+		}
+		else
+		{
+			_XMPPproblem = true;
+			_XMPPstatus = "XMPP lost connection";
+			_robotStatus = "Not operating";
+			_timeXMPPconnectionLost = System.currentTimeMillis(); // we will set up an alarm to periodically retry
+			Log.d(LOG, "resetting XMPP failed");
+		}
+		_commFlagXMPP = false;
+		_echoReceivedXMPP = false;
 	}
 
 	private void tryResetC2DM()
 	{
-		Log.d(LOG, "checking reset C2DM");
-		_C2DMproblem = true;
+		Log.d(LOG, "in tryResetC2DM");
+		_XMPPstatus = "resetting C2DM";
+		//if (c2dm == null) c2dm = new C2DM(this);
+		//if (c2dm.getConnectionState()) c2dm.resetConnection();
+		//if (connectC2DM())
+		//{
+		//Log.d(LOG, "reconnected to C2DM server");
+		//_lastXMPPreceivedTime = System.currentTimeMillis(); // give it some time to settle down before testing it
+		//Log.d(LOG, "_lastC2DMreceivedTime set in tryResetXMPP");
+		//}
+		//else
+		{
+			_C2DMproblem = true;
+			_C2DMstatus = "C2DM lost connection";
+			//_robotStatus = "Not operating";
+			_timeC2DMconnectionLost = System.currentTimeMillis(); // we will set up an alarm to periodically retry
+			Log.d(LOG, "resetting C2DM failed");
+		}
 		_commFlagC2DM = false;
-		_C2DMstatus = "C2DM lost";
-		//_robotStatus = "Not operating";
+		_echoReceivedC2DM = false;
 	}
 
 	public void connectBluetooth(String bluetoothAddress)
@@ -265,6 +296,7 @@ public class RobotCommService extends Service {
 		if (BT.Connect()) {  // this blocks until BT connects or times out
 			// might want to run in Async
 			_bluetoothStatus = "Connected";
+			_bluetoothProblem = false;
 			updateWidget();
 			Log.d(LOG, "Bluetooth connected");
 			Toast.makeText(this, "Bluetooth connected", Toast.LENGTH_SHORT).show();
@@ -280,19 +312,19 @@ public class RobotCommService extends Service {
 		}
 	}
 
-	public void connectXMPP()
+	public boolean connectXMPP()
 	{
 		if (xmpp.getConnectionState()) {
 			_XMPPstatus = "still connected";
 			updateWidget();
 			Log.d(LOG, "XMPP connection requested, already connected");
-			return;
+			return true;
 		}
 		getPreferences();
 		if (!EntriesTest()) {
 			Log.d(LOG, "Asking for XMPP connection with bad parameters");
 			Toast.makeText(this, "bad parameters", Toast.LENGTH_SHORT).show();
-			return;
+			return false;
 		}
 		Log.d(LOG, "in connectXMPP");
 		xmpp.setCommParameters(host, portNumber, service, userid, password, recipient, recipientForEcho);
@@ -302,8 +334,10 @@ public class RobotCommService extends Service {
 			Toast.makeText(this, "XMPP connected", Toast.LENGTH_SHORT).show();
 			Log.d(LOG, "XMPP connected");
 			_XMPPstatus = "Connected";
+			_XMPPproblem = false;
 			updateWidget();
 			setupPacketListener();
+			return true;
 		}
 		else {
 			Toast.makeText(this, "XMPP connection failed, opening RobotCommActivity", Toast.LENGTH_LONG).show();
@@ -314,6 +348,7 @@ public class RobotCommService extends Service {
 			Intent RobotCommIntent = new Intent(this, RobotCommActivity.class);
 			RobotCommIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			startActivity(RobotCommIntent);
+			return false;
 		}
 	}
 
@@ -534,27 +569,15 @@ public class RobotCommService extends Service {
 						serviceIntent.putExtra("commCheckBT", "c");
 						_echoSentTimeBT = System.currentTimeMillis();
 						Log.d(LOG, "_echoSentTimeBT set");
-						// need to update received time too, so that if a real command comes back
-						// before the echo is returned (so _echoReceivedTimeBT is not updated)
-						// we will still get a nonnegative number for latency
-						_echoReceviedTimeBT = System.currentTimeMillis();
-						Log.d(LOG, "_echoReceivedTimeBT set");
-						_lastArduinoReceivedTime = System.currentTimeMillis();
+						_lastArduinoReceivedTime = System.currentTimeMillis(); // makes us wait for another timeout
 						Log.d(LOG, "_lastArduinoReceivedTime reset for echo");
 						_context.startService(serviceIntent);
-						// and reset the ArduinoReceivedTime so that if we again exceed the timeout,
-						// we know we have a real bluetooth comm issue, not just a long
-						// time between user commands
-
 					}
 				}
 				else if (_echoReceivedBT)
 				{
 					Log.d(LOG, "arduino echo request returned good");
 					// our BT comm check came back good
-					// note that if a real command happens to return before the echo is returned
-					// that's OK, we will end up calculating a faster than real latency
-					// but it does not impact us and will be a rare occurrence.
 					_commFlagBT = false;
 					_echoReceivedBT = false;
 					_robotStatus = "bluetooth OK";
@@ -563,81 +586,83 @@ public class RobotCommService extends Service {
 					Log.d(LOG, "_latencyBT calculated = " + _latencyBT);
 				}
 			}
-			/*
+
 			boolean sendServerEcho = false;
 			// now check on XMPP
-			if ( (!_XMPPproblem) && System.currentTimeMillis() - _lastXMPPreceivedTime > TIME_OUT_XMPP)
+			if (!_XMPPproblem)
 			{
-				// if we sent a character for echo and heard nothing, we need to reset XMPP
-				// unless we already tried and failed to reset, in which case we give up
-				if (_commFlagXMPP)
-				{
-					Log.d(LOG, "XMPP comm timed out after an echo request, so we will try to reset XMPP");
-					Intent serviceIntent = new Intent();
-					serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
-					serviceIntent.putExtra("reset", "XMPP");
-					_context.startService(serviceIntent);
-				}
-				else
-				{
-					Log.d(LOG, "XMPP comm timed out, so we will request an echo to see if XMPP is still connected");
-					sendServerEcho = true;
-				}
-			}
-			else if (_commFlagXMPP)
-			{
-				Log.d(LOG, "XMPP echo request returned good");
-				// our XMPP comm check came back good
-				// note that if a real command happens to return before the echo is returned
-				// that's OK, we will end up calculating a faster than real latency
-				// but it does not impact us and will be a rare occurrence.
-				_commFlagXMPP = false;
-				_robotStatus = "XMPP OK";
-				_latencyXMPP = _echoReceivedTimeXMPP - _echoSentTimeServer;
-				_XMPPstatus = "latency = " + String.valueOf(_latencyXMPP);
-				Log.d(LOG, "_latencyXMPP calculated = " + _latencyXMPP);
-			}
 
-			if ( (!_C2DMproblem) && System.currentTimeMillis() - _lastC2DMreceivedTime > TIME_OUT_C2DM)
-			{
-				if (_commFlagC2DM)
+				if ( System.currentTimeMillis() - _lastXMPPreceivedTime > TIME_OUT_XMPP)
 				{
-					Log.d(LOG, "C2DM comm timed out after an echo request, so we will try to reset C2DM");
-					Intent serviceIntent = new Intent();
-					serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
-					serviceIntent.putExtra("reset", "C2DM");
-					_context.startService(serviceIntent);
+					// if we sent a character for echo and heard nothing, we need to reset XMPP
+					// unless we already tried and failed to reset, in which case we give up
+					if (_commFlagXMPP)
+					{
+						Log.d(LOG, "XMPP comm timed out after an echo request, so we will try to reset XMPP");
+						Intent serviceIntent = new Intent();
+						serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
+						serviceIntent.putExtra("reset", "XMPP");
+						_context.startService(serviceIntent);
+					}
+					else
+					{
+						Log.d(LOG, "XMPP comm timed out, so we will request an echo to see if XMPP is still connected");
+						sendServerEcho = true;
+						_XMPPstatus = "Checking XMPP connection";
+					}
 				}
-				else
+				else if (_echoReceivedXMPP)
 				{
-					Log.d(LOG, "C2DM comm timed out, so we will request and echo to see if C2DM is still connected");
-					sendServerEcho = true;
+					Log.d(LOG, "XMPP echo request returned good");
+					// our XMPP comm check came back good
+					_commFlagXMPP = false;
+					_echoReceivedXMPP = false;
+					_robotStatus = "XMPP OK";
+					_latencyXMPP = _echoReceivedTimeXMPP - _echoSentTimeServer;
+					_XMPPstatus = "latency = " + String.valueOf(_latencyXMPP);
+					Log.d(LOG, "_latencyXMPP calculated = " + _latencyXMPP);
 				}
 			}
-			else if (_commFlagC2DM)
+			if (!_C2DMproblem)
 			{
-				Log.d(LOG, "C2DM echo came back good");
-				// our C2DM comm check came back good
-				// note that if a real command happens to return before the echo is returned
-				// that's OK, we will end up calculating a faster than real latency
-				// but it does not impact us and will be a rare occurrence.
-				_commFlagC2DM = false;
-				_robotStatus = "C2DM OK";
-				_latencyC2DM = _echoReceivedTimeC2DM - _echoSentTimeServer;
-				_C2DMstatus = "latency = " + String.valueOf(_latencyC2DM);
-				Log.d(LOG, "_latencyC2DM calculated = " + _latencyC2DM);
+				if (System.currentTimeMillis() - _lastC2DMreceivedTime > TIME_OUT_C2DM)
+				{
+					if (_commFlagC2DM)
+					{
+						Log.d(LOG, "C2DM comm timed out after an echo request, so we will try to reset C2DM");
+						Intent serviceIntent = new Intent();
+						serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
+						serviceIntent.putExtra("reset", "C2DM");
+						_context.startService(serviceIntent);
+					}
+					else
+					{
+						Log.d(LOG, "C2DM comm timed out, so we will request and echo to see if C2DM is still connected");
+						_C2DMstatus = "Checking C2DM connection";
+						sendServerEcho = true;
+					}
+				}
+				else if (_echoReceivedC2DM)
+				{
+					Log.d(LOG, "C2DM echo came back good");
+					// our C2DM comm check came back good
+					_commFlagC2DM = false;
+					_echoReceivedC2DM = false;
+					_robotStatus = "C2DM OK";
+					_latencyC2DM = _echoReceivedTimeC2DM - _echoSentTimeServer;
+					_C2DMstatus = "latency = " + String.valueOf(_latencyC2DM);
+					Log.d(LOG, "_latencyC2DM calculated = " + _latencyC2DM);
+				}
 			}
-
 			if (sendServerEcho)
 			{
 				_robotStatus = "Checking XMPP and C2DM connections";
-				_commFlagC2DM = true;
 				_commFlagXMPP = true;
+				_echoReceivedXMPP = false;
+				_commFlagC2DM = true;
+				_echoReceivedC2DM = false;
 				_echoSentTimeServer = System.currentTimeMillis();
 				Log.d(LOG, "_echoSentTimeServer set");
-				// need to update received time too, so that if a real command comes back
-				// before the echo is returned (so _echoReceivedTimeXMPP is not updated)
-				// we will still get a nonnegative number for latency
 				_echoReceivedTimeXMPP = System.currentTimeMillis();
 				Log.d(LOG, "_echoReceivedTimeXMPP set");
 				_echoReceivedTimeC2DM = System.currentTimeMillis();
@@ -650,11 +675,8 @@ public class RobotCommService extends Service {
 				serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
 				serviceIntent.putExtra("SendToServer", "commCheckServer");
 				_context.startService(serviceIntent);
-				// and reset the ReceivedTimes so that if we again exceed the timeout,
-				// we know we have a real server comm issue, not just a long
-				// time between user commands
 			}
-			 */
+
 		}
 	}
 }

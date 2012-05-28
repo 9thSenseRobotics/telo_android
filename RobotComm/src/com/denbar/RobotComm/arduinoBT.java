@@ -26,9 +26,8 @@ public class arduinoBT
 	byte[] readBuffer;
 	int readBufferPosition;
 	int counter;
-	//long _echoReceivedTime, _ArduinoCharForEchoSentTime;
 	volatile boolean stopWorker;
-	boolean _isConnected; //, _echoSent;
+	boolean _isConnected;
 	String _BTaddress;
 	Context _context;
 	public String _echoData = "";
@@ -37,7 +36,6 @@ public class arduinoBT
 
 	public arduinoBT(Context CallingContext)
     {
-//    	_context = CallingContext.getApplicationContext();
 		_context = CallingContext;
     	_BTaddress = "invalid address";	// just so it is not an empty string
     	_isConnected = false;
