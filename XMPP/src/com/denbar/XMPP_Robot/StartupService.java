@@ -12,6 +12,7 @@ import org.jivesoftware.smack.packet.Presence;
 //import org.jivesoftware.smack.util.StringUtils;
 
 import android.app.Service;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -50,7 +51,7 @@ public class StartupService extends Service {
         password = prefs.getString("password",robotResources.getString(R.string.password));
         bluetooth = prefs.getString("bluetooth",robotResources.getString(R.string.bluetooth)).toUpperCase();
         recipient = prefs.getString("recipient",robotResources.getString(R.string.recipient));
-        
+
         Toast.makeText(this, "Host " + host, Toast.LENGTH_SHORT).show();
         Toast.makeText(this, "Port " + port, Toast.LENGTH_SHORT).show();
         forwardToAddress = robotResources.getString(R.string.forwardToAddress);
@@ -258,7 +259,8 @@ public class StartupService extends Service {
     	if ( !host.contains(".")) return false;
     	if ( !service.contains(".")) return false;
     	if ( userid.contains("@")) return false;
-    	if ( !bluetooth.matches("[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]")) return false;
+    	if (!BluetoothAdapter.checkBluetoothAddress(bluetooth)) return false;
+    	//if ( !bluetooth.matches("[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]")) return false;
     	return true;
 	}
 
