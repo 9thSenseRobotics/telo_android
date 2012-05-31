@@ -59,13 +59,12 @@
 //
 // from xml.etree.ElementTree import ElementTree, fromstring, tostring, dump, SubElement
 package com.denbar.RobotComm;
-//package java_xml_library;
 
+//package java_xml_library;
 
 import org.w3c.dom.Document;
 
-public class RobotMessages
-{
+public class RobotMessages {
 	// in every RobotMessage (comment defaults to blank)
 	public String driverAddr = "";
 	public String robotAddr = "";
@@ -79,8 +78,9 @@ public class RobotMessages
 	// additional for messages from robot to driver
 	public String responseValue = "";
 
-	public Document XML; //# XML type
+	public Document XML; // # XML type
 	public String XMLStr;
 
-	public String timeStamp = ""; //when it was created  - time.microtime() (float)
+	public String timeStamp = ""; // when it was created - time.microtime()
+									// (float)
 }

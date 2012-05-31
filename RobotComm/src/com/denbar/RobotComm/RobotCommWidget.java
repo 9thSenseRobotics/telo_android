@@ -12,8 +12,8 @@ public class RobotCommWidget extends AppWidgetProvider {
 	private static final String LOG = "RobotCommWidget";
 
 	@Override
-	public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds)
-	{
+	public void onUpdate(Context context, AppWidgetManager appWidgetManager,
+			int[] appWidgetIds) {
 		Log.d(LOG, " in onUpdate");
 		// Get all ids
 		ComponentName thisWidget = new ComponentName(context,
@@ -21,7 +21,8 @@ public class RobotCommWidget extends AppWidgetProvider {
 		int[] allWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
 
 		// Build the intent to call the service and update the widget
-		Intent intent = new Intent(context.getApplicationContext(),	UpdateWidgetService.class);
+		Intent intent = new Intent(context.getApplicationContext(),
+				UpdateWidgetService.class);
 		intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, allWidgetIds);
 		context.startService(intent);
 	}

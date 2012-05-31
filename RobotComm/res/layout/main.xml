@@ -14,11 +14,17 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:minWidth="100dp"
-            android:text="Name:" />
+            android:text="@string/version" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:minWidth="50dp"
+            android:text="   Name:" />
 
         <EditText
             android:id="@+id/robotname"
-            android:layout_width="199dp"
+            android:layout_width="100dp"
             android:layout_height="match_parent"
             android:autoText="false"
             android:capitalize="none"
@@ -195,12 +201,27 @@
             android:textSize="11sp" />
     </LinearLayout>
 
-    <Button
-        android:id="@+id/btnSendToRobot"
-        android:layout_width="120dp"
-        android:layout_height="60dp"
-        android:text="Send to Robot" >
-    </Button>
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="70dp"
+        android:orientation="horizontal" >
+
+	    <Button
+	        android:id="@+id/btnSendToRobot"
+	        android:layout_width="120dp"
+	        android:layout_height="60dp"
+	        android:text="Send to Robot" >
+	    </Button>
+
+	    <Button
+	        android:id="@+id/btnSleep"
+	        android:layout_width="120dp"
+	        android:layout_height="60dp"
+	        android:text="Sleep" >
+	    </Button>
+
+    </LinearLayout>
 
     <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"

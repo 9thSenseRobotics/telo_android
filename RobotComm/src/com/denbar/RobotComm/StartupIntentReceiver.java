@@ -5,13 +5,12 @@ import android.content.Context;
 import android.content.Intent;
 
 /**
- * Gets the startup intent and calls the service that will register with
- * our XMPP and C2DM servers
- * This exists as glue between the "hey we just finished booting" code and the
- * registration code
+ * Gets the startup intent and calls the service that will register with our
+ * XMPP and C2DM servers This exists as glue between the
+ * "hey we just finished booting" code and the registration code
  *
  */
-public class StartupIntentReceiver extends BroadcastReceiver{
+public class StartupIntentReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		Intent serviceIntent = new Intent();

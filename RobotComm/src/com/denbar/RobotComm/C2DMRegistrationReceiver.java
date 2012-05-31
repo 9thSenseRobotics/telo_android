@@ -1,6 +1,5 @@
 package com.denbar.RobotComm;
 
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -29,14 +28,14 @@ import android.util.Log;
 import android.widget.Toast;
 
 /**
- * To use C2DM you must register your device against Google's servers.  This is the class that
- * deals with the callback for that registration (ie when it works, for example).
- * Gets the information in the callback such as the device key (which a server needs when sending
- * a notification.
- *
- * Then sends the key to our server which will write it down
- * in the MySQL database.
- *
+ * To use C2DM you must register your device against Google's servers. This is
+ * the class that deals with the callback for that registration (ie when it
+ * works, for example). Gets the information in the callback such as the device
+ * key (which a server needs when sending a notification.
+ * 
+ * Then sends the key to our server which will write it down in the MySQL
+ * database.
+ * 
  */
 public class C2DMRegistrationReceiver extends BroadcastReceiver {
 
@@ -44,15 +43,14 @@ public class C2DMRegistrationReceiver extends BroadcastReceiver {
 	// records to registration ID and phone data
 	private static final String TELOBOT_REGISTER_URL = "http://9thsense.com/telo/register.php";
 
-
 	private static final String C2DM_RETRY = "com.google.android.c2dm.intent.RETRY";
 
 	private long backoffTimeMs = 30000;
 
 	/**
-	 * Called on a broadcast.  Checks to make sure it is the REGISTRATION broadcast
-	 * and then sends the ID to the server.  If there is a failure, schedules a retry
-	 * with exponential backoff.
+	 * Called on a broadcast. Checks to make sure it is the REGISTRATION
+	 * broadcast and then sends the ID to the server. If there is a failure,
+	 * schedules a retry with exponential backoff.
 	 */
 	@Override
 	public void onReceive(Context context, Intent intent) {
@@ -70,20 +68,24 @@ public class C2DMRegistrationReceiver extends BroadcastReceiver {
 			if ("SERVICE_NOT_AVAILABLE".equals(error)) {
 
 				// schedule a retry
-		        Log.d("com.denbar.C2DM_Receiver", "Scheduling registration retry, backoff = " + backoffTimeMs);
-		        Intent retryIntent = new Intent(C2DM_RETRY);
-		        PendingIntent retryPIntent = PendingIntent.getBroadcast(context,
-		                0 /*requestCode*/, retryIntent, 0 /*flags*/);
+				Log.d("com.denbar.C2DM_Receiver",
+						"Scheduling registration retry, backoff = "
+								+ backoffTimeMs);
+				Intent retryIntent = new Intent(C2DM_RETRY);
+				PendingIntent retryPIntent = PendingIntent
+						.getBroadcast(context, 0 /* requestCode */, retryIntent,
+								0 /* flags */);
 
-		        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-		        am.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + backoffTimeMs,
-		                retryPIntent);
+				AlarmManager am = (AlarmManager) context
+						.getSystemService(Context.ALARM_SERVICE);
+				am.set(AlarmManager.ELAPSED_REALTIME, SystemClock
+						.elapsedRealtime()
+						+ backoffTimeMs, retryPIntent);
 
-		        // Next retry should wait longer (exponential backoff)
-		        backoffTimeMs *= 2;
-		        return;
-		    }
-
+				// Next retry should wait longer (exponential backoff)
+				backoffTimeMs *= 2;
+				return;
+			}
 
 			Log.d("C2DM", "dmControl: registrationId = " + registrationId
 					+ ", error = " + error);
@@ -94,57 +96,49 @@ public class C2DMRegistrationReceiver extends BroadcastReceiver {
 
 			// create a notification that we got the ID
 			// this is safe to comment out.
-			Toast.makeText(context, "Registration successful", Toast.LENGTH_SHORT).show();
+			Toast.makeText(context, "Registration successful",
+					Toast.LENGTH_SHORT).show();
 
 			// get the phone name
-			SharedPreferences prefs = context.getSharedPreferences("com.denbar.C2DM_Receiver",
-					Context.MODE_WORLD_WRITEABLE );
+			SharedPreferences prefs = context.getSharedPreferences(
+					"com.denbar.C2DM_Receiver", Context.MODE_WORLD_WRITEABLE);
 			String phoneName = prefs.getString("phoneName", "default name");
 
 			// send the ID to the server
 			sendRegistrationIdToServer(deviceId, phoneName, registrationId);
 
-
 			saveRegistrationId(context, registrationId);
 
-
-
-
-		/*
-		} else if ("com.denbar.C2DM_Receiver.RETRY".equals(action)) {
-			Log.w("C2DM", "RETRY Receiver called");
-			checkForRetry(context, intent);
-		*/
+			/*
+			 * } else if ("com.denbar.C2DM_Receiver.RETRY".equals(action)) {
+			 * Log.w("C2DM", "RETRY Receiver called"); checkForRetry(context,
+			 * intent);
+			 */
 		}
 	}
 
 	/**
-	 * Checks the internal preferences to see if there is an ID.  If not,
-	 * attempts a retry.  Currently unused since Android seems to do a pretty
-	 * good job of caching attempts to register when the internet connection
-	 * is down.
+	 * Checks the internal preferences to see if there is an ID. If not,
+	 * attempts a retry. Currently unused since Android seems to do a pretty
+	 * good job of caching attempts to register when the internet connection is
+	 * down.
 	 */
 	/*
-	private void checkForRetry(Context context, Intent intent)
-	{
-		SharedPreferences prefs = PreferenceManager
-				.getDefaultSharedPreferences(context);
-//		Editor edit = prefs.edit();
-
-		boolean regOk = prefs.getBoolean(TeloActivity.REGISTERED, false);
-
-		if (regOk != true)
-		{
-			// need to retry
-
-			// restart the service to make it retry
-			Intent serviceIntent = new Intent();
-			serviceIntent.setAction("com.denbar.C2DM_Receiver.TeloStartupService");
-			context.startService(serviceIntent);
-
-		}
-	}
-	*/
+	 * private void checkForRetry(Context context, Intent intent) {
+	 * SharedPreferences prefs = PreferenceManager
+	 * .getDefaultSharedPreferences(context); // Editor edit = prefs.edit();
+	 * 
+	 * boolean regOk = prefs.getBoolean(TeloActivity.REGISTERED, false);
+	 * 
+	 * if (regOk != true) { // need to retry
+	 * 
+	 * // restart the service to make it retry Intent serviceIntent = new
+	 * Intent();
+	 * serviceIntent.setAction("com.denbar.C2DM_Receiver.TeloStartupService");
+	 * context.startService(serviceIntent);
+	 * 
+	 * } }
+	 */
 
 	/**
 	 * save the registration ID to a preference (not currently used)
@@ -158,15 +152,18 @@ public class C2DMRegistrationReceiver extends BroadcastReceiver {
 		edit.commit();
 	}
 
-
 	/**
 	 * Sends the registration ID to the server, with the URL defined in
 	 * TELOBOT_REGISTER_URL
-	 *
-	 * @param deviceId unique device ID
-	 * @param registrationId registration ID from Google
-	 * @param phoneName name of the phone to display to the user on the website
-	 * @return returns true on success (server said OK)  If this is true, there is a very high probability that everything is working well
+	 * 
+	 * @param deviceId
+	 *            unique device ID
+	 * @param registrationId
+	 *            registration ID from Google
+	 * @param phoneName
+	 *            name of the phone to display to the user on the website
+	 * @return returns true on success (server said OK) If this is true, there
+	 *         is a very high probability that everything is working well
 	 */
 	public void sendRegistrationIdToServer(String deviceId, String phoneName,
 			String registrationId) {
@@ -186,21 +183,21 @@ public class C2DMRegistrationReceiver extends BroadcastReceiver {
 		try {
 			post.setEntity(new UrlEncodedFormEntity(nameValuePairs));
 		} catch (UnsupportedEncodingException e1) {
-			//e1.printStackTrace();
+			// e1.printStackTrace();
 		}
 
 		// execute the HTML POST call to hit the server
 		new Thread(new Runnable() {
-		    public void run() {
-		    	try {
+			public void run() {
+				try {
 					HttpResponse response = client.execute(post);
 				} catch (ClientProtocolException e) {
-					//e.printStackTrace();
+					// e.printStackTrace();
 				} catch (IOException e) {
-					//e.printStackTrace();
+					// e.printStackTrace();
 				}
-		    }
-		  }).start();
+			}
+		}).start();
 
 	}
 }
