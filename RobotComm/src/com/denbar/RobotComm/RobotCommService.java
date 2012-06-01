@@ -162,6 +162,7 @@ public class RobotCommService extends Service {
 			// sending out a server comm check
 			String requestServer = intent.getStringExtra("SendToServer");
 
+
 			// received a message from the arduino via the bluetooth, intent
 			// sent from arduinoBT
 			if (messageFromRobot != null) {
@@ -183,7 +184,7 @@ public class RobotCommService extends Service {
 					if (messageFromRobot.startsWith("m"))
 						messageToServer(messageFromRobot, "m"); // data from robot was sent
 					else
-						sendCommandEchoFromArduino(messageFromRobot); // just command echo
+						sendCommandEchoFromArduino(messageFromRobot, "a"); // just command echo
 				}
 			}
 
@@ -428,14 +429,13 @@ public class RobotCommService extends Service {
 
 	}
 
-	public boolean sendCommandEchoFromArduino(String data) {
+	public boolean sendCommandEchoFromArduino(String data, String responseValue) {
 		if (xmpp == null) {
-			Log.d(TAG, "tried to send data: " + data
-					+ " to XMPP server when xmpp not created");
+			Log.d(TAG, "tried to send data: " + data + " to XMPP server when xmpp not created");
 			return false;
 		}
 		Log.d(TAG, "in sendCommandEchoFromArduino: " + data);
-		if (xmpp.sendCommandEchoFromArduino(data)) {
+		if (xmpp.sendCommandEchoFromArduino(data, responseValue)) {
 			_messageSentToServer = data;
 			updateWidget();
 			return true;
@@ -469,19 +469,6 @@ public class RobotCommService extends Service {
 		Log.d(TAG, "in sendDataToArduino");
 		if (BT._isConnected) {
 			Toast.makeText(this, robotCommand, Toast.LENGTH_SHORT).show();
-			// only send an echo of the command the server sent,
-			// don't send local echos to the server, they are just for local BT
-			// latency monitoring
-			// if (!robotCommand.startsWith("commCheckBT") &&
-			// (!robotCommand.startsWith("!")))
-			// messageToServer("command received: " + robotCommand,
-			// recipientForEcho); // echo command
-			// we echo the command from here to let the server know it was
-			// received at this level
-			// a second echo should come back as the arduino echos commands it
-			// receives
-			// and those will come through to RobotCommServer as an intent
-			// with a string in "messageToServer"
 			if (BT.sendMessage(robotCommand)) {
 				_messageSentToRobot = robotCommand;
 				updateWidget();
@@ -489,10 +476,8 @@ public class RobotCommService extends Service {
 			} else
 				return false;
 		}
-		Log.d(TAG, "tried to sendDataToArduino: " + robotCommand
-				+ " when BT not connected");
-		messageToServer("error: bluetooth not connected", "m"); // let the user
-																// know
+		Log.d(TAG, "tried to sendDataToArduino: " + robotCommand + " when BT not connected");
+		messageToServer("error: bluetooth not connected", "m"); // let the user know
 		return false;
 	}
 
@@ -526,22 +511,6 @@ public class RobotCommService extends Service {
 		return true;
 	}
 
-	/*
-	 * private boolean EntriesTest() { Log.d(TAG, "in EntriesTest"); boolean
-	 * returnResult = true; try { int portNumber = Integer.parseInt(port); }
-	 * catch(NumberFormatException nfe) { message += "port, "; returnResult =
-	 * false; } if ( (!recipient.contains("@")) || (!recipient.contains("."))) {
-	 * message += "recipient, "; returnResult = false; } if (
-	 * (!recipientForEcho.contains("@")) || (!recipientForEcho.contains("."))) {
-	 * message += "recipientForEcho, "; returnResult = false; } if (
-	 * !host.contains(".")) { message += "host,"; returnResult = false; } if (
-	 * !service.contains(".")) { message += "service, "; returnResult = false; }
-	 * if ( userid.contains("@")) { message += "userid,"; returnResult = false;
-	 * } if (!BluetoothAdapter.checkBluetoothAddress(bluetooth)) { message +=
-	 * "bluetooth "; returnResult = false; } if (!returnResult) { Log.d(TAG,
-	 * "failed EntriesTest"); } else Log.d(TAG, "passed EntriesTest"); return
-	 * returnResult; }
-	 */
 	private final IBinder binder = new MyBinder();
 
 	@Override
@@ -696,10 +665,6 @@ public class RobotCommService extends Service {
 	return localPacketListener;
 	}
 
-
-
-
-
 	// once we are connected, we want to listen for packets
 	// so set up a packet listener
 	// don't know why this does not work when it is in the XMPP class
@@ -707,8 +672,7 @@ public class RobotCommService extends Service {
 	public void setupPacketListener1() {
 		Log.d(TAG, "in setupPacketListener");
 		if (_connection == null) {
-			Log.d(TAG,
-					"tried to setup packetListener with no connection present");
+			Log.d(TAG, "tried to setup packetListener with no connection present");
 			return;
 		}
 		// Add a packet listener to get messages sent to us
@@ -722,35 +686,49 @@ public class RobotCommService extends Service {
 					if (body.contains("<")) {
 						MessageToRobot myMessage = new MessageToRobot(message
 								.getBody());
-						_robotCommand = myMessage.commandChar
-								+ myMessage.commandArguments;
+						_robotCommand = myMessage.commandChar + myMessage.commandArguments;
 					} else
 						_robotCommand = body;
-					Log.d(TAG, "message received in processPacket: "
-							+ _robotCommand);
+					Log.d(TAG, "message received in processPacket: " + _robotCommand);
 					_messageReceivedFromServer = _robotCommand;
 
 					_lastXMPPreceivedTime = System.currentTimeMillis();
 					Log
-							.d(TAG,
-									"_lastArduinoReceivedTime updated in processPacket");
+							.d(TAG,	"_lastArduinoReceivedTime updated in processPacket");
 
-					if (_robotCommand.startsWith("!")) // see if it is just an
-														// XMPP server echo
+					if (_robotCommand.startsWith("!")) // see if it is just an XMPP server echo
 					{
 						_echoReceivedXMPP = true;
-						_echoReceivedTimeXMPP = System.currentTimeMillis(); // just
-																			// an
-																			// echo
-						Log
-								.d(TAG,
-										"_echoReceivedTimeXMPP updated in processPacket");
-					} else // don't send along the message if was just an echo
+						_echoReceivedTimeXMPP = System.currentTimeMillis(); // just an echo, don't send it along
+						Log.d(TAG, "_echoReceivedTimeXMPP updated in processPacket");
+					}
+					else if (_robotCommand.startsWith("P"))	// server is asking for status check, sleeping or not
+					{
+						String status = "0";
+						if ( (!_sleeping) && (!_XMPPproblem) && (!_bluetoothProblem)) status = "1";
+						sendCommandEchoFromArduino(status, "P");
+						// this is not from Arduino, but it goes to controller, so we use this call
+					}
+					else if (_robotCommand.startsWith("p"))	// server is asking to toggle sleep state
+					{
+						String status = "1";
+						if (_sleeping  && (!_XMPPproblem) && (!_bluetoothProblem))
+						{
+							sendCommandEchoFromArduino(status, "P");
+							wakeUp();
+						}
+						else
+						{
+							status = "0";
+							sendCommandEchoFromArduino(status, "P");
+							sleep();
+						}
+					}
+					else if (!_sleeping)
 					{
 						_Handler.post(new Runnable() {
 							public void run() {
 								sendDataToArduino(_robotCommand);
-
 							}
 						});
 					}
@@ -778,9 +756,7 @@ public class RobotCommService extends Service {
 			Log.d(TAG, "in checkCommTimer");
 			updateWidget();
 			if (EntriesTest()) {
-				if ((!_bluetoothProblem) && _triedBTconnect) // skip if BT is
-																// out or never
-																// tried
+				if ((!_bluetoothProblem) && _triedBTconnect) // skip if BT is out or never tried
 				{
 					if (System.currentTimeMillis() - _lastArduinoReceivedTime > TIME_OUT_ARDUINO) {
 						// if we sent a character for echo and heard nothing, we

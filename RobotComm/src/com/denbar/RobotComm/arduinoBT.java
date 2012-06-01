@@ -15,7 +15,7 @@ import android.os.Handler;
 import android.util.Log;
 
 public class arduinoBT {
-	private static final String LOG = "ArduinoBT";
+	private static final String TAG = "ArduinoBT";
 	private BluetoothDevice _bluetoothTarget;
 	private BluetoothAdapter _bluetoothAdapter;
 	private BluetoothSocket _socket;
@@ -65,22 +65,12 @@ public class arduinoBT {
 		_isConnected = false;
 	}
 
-	/*
-	 * // every other call should give a result > 0 if you wait long enough
-	 * between the calls public long checkLatency() { long latency; if
-	 * (_echoReceivedTime > 0) { latency = _echoReceivedTime -
-	 * _ArduinoCharForEchoSentTime; _echoSent = false; _echoReceivedTime = 0;
-	 * return latency; } else { if (!_echoSent) { _ArduinoCharForEchoSentTime =
-	 * System.currentTimeMillis(); sendMessage("echo"); _echoSent = true; }
-	 * return 0; } }
-	 */
-
 	public boolean resetConnection() {
 		// start by forcing close
 		try {
 			closeBT();
 		} catch (IOException ex) {
-			Log.d(LOG, "closeBT returned exception" + ex);
+			Log.d(TAG, "closeBT returned exception" + ex);
 		}
 		_isConnected = false;
 		if (!Connect())
@@ -92,27 +82,27 @@ public class arduinoBT {
 		if (_isConnected) {
 			// we got a call to Connect() even though we think we are already
 			// connected
-			Log.d(LOG, "Connect requested when already connected");
+			Log.d(TAG, "Connect requested when already connected");
 			return true;
 		}
 		try {
 			if (!findBT()) {
-				Log.d(LOG, "findBT returned false");
+				Log.d(TAG, "findBT returned false");
 				return false;
 			}
 		} catch (IOException ex) {
-			Log.d(LOG, "FindBT returned exception" + ex);
+			Log.d(TAG, "FindBT returned exception" + ex);
 			return false;
 
 		}
 
 		try {
 			if (!openBT()) {
-				Log.d(LOG, "openBT returned false");
+				Log.d(TAG, "openBT returned false");
 				return false;
 			}
 		} catch (IOException ex) {
-			Log.d(LOG, "OpenBT returned exception" + ex);
+			Log.d(TAG, "OpenBT returned exception" + ex);
 			return false;
 		}
 		_isConnected = true;
@@ -123,7 +113,7 @@ public class arduinoBT {
 	private boolean findBT() throws IOException {
 		_bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (_bluetoothAdapter == null) {
-			Log.d(LOG, "No BT adapter available");
+			Log.d(TAG, "No BT adapter available");
 			return false;
 		}
 		if (!_bluetoothAdapter.isEnabled()) {
@@ -152,28 +142,26 @@ public class arduinoBT {
 				}
 
 				if (_bluetoothAdapter.getState() != BluetoothAdapter.STATE_ON)
-					Log.d(LOG, "BT sucessfully powered up");
+					Log.d(TAG, "BT sucessfully powered up");
 				else {
 					if (_bluetoothAdapter.getState() == BluetoothAdapter.STATE_TURNING_ON)
-						Log
-								.d(LOG,
-										"BT is turning on, wait a bit and try again");
+						Log.d(TAG, "BT is turning on, wait a bit and try again");
 					else
-						Log.d(LOG, "BT failed to turn on");
+						Log.d(TAG, "BT failed to turn on");
 					return false;
 				}
 			} else {
-				Log.d(LOG, "BT did not enable");
+				Log.d(TAG, "BT did not enable");
 				return false;
 			}
 		} else
-			Log.d(LOG, "BT previously enabled");
+			Log.d(TAG, "BT previously enabled");
 
 		// get remote BTs that are paired with us
 		Set<BluetoothDevice> pairedDevices = _bluetoothAdapter
 				.getBondedDevices();
 		if (pairedDevices == null) {
-			Log.d(LOG, "No paired BT devices");
+			Log.d(TAG, "No paired BT devices");
 			return false;
 		}
 		if (pairedDevices.size() > 0) {
@@ -181,27 +169,24 @@ public class arduinoBT {
 				if (device.getName().startsWith("FireFly-")
 						|| device.getName().startsWith("RN42-")) {
 					_bluetoothTarget = device;
-					Log.d(LOG, "Found ardunio BT device named "
+					Log.d(TAG, "Found ardunio BT device named "
 							+ _bluetoothTarget.getName());
-					Log.d(LOG, "device address is "
-							+ _bluetoothTarget.getAddress());
+					Log.d(TAG, "device address is "	+ _bluetoothTarget.getAddress());
 					break;
 				}
 			}
 		} else {
-			Log
-					.d(LOG,
-							"BT adapter is not STATE_ON so we could not list paired BT devices");
+			Log.d(TAG, "BT adapter is not STATE_ON so we could not list paired BT devices");
 			return false;
 		}
 
 		if (_bluetoothTarget == null) {
-			Log.d(LOG, "no BT target found that matches our BT device");
+			Log.d(TAG, "no BT target found that matches our BT device");
 			return false;
 		}
 
 		if (_bluetoothTarget.getBondState() != BluetoothDevice.BOND_BONDED) {
-			Log.d(LOG, "Unable to find a paired arduino BT");
+			Log.d(TAG, "Unable to find a paired arduino BT");
 			return false;
 		}
 
@@ -213,18 +198,17 @@ public class arduinoBT {
 
 		if (BluetoothAdapter.checkBluetoothAddress(_BTaddress)) {
 			_bluetoothTarget = _bluetoothAdapter.getRemoteDevice(_BTaddress);
-			// A BluetoothDevice will always be returned for a valid hardware
-			// address,
+			// A BluetoothDevice will always be returned for a valid hardware address,
 			// even if this adapter has never seen that device
 			// so we need to check that we are paired with this one
 			if (_bluetoothTarget.getBondState() == BluetoothDevice.BOND_BONDED) {
-				Log.d(LOG, "Our arduino BT device found successfully");
+				Log.d(TAG, "Our arduino BT device is recognized as paired");
 			} else {
-				Log.d(LOG, "The BT found with our address is not paired");
+				Log.d(TAG, "The BT found with our address is not paired");
 				return false;
 			}
 		} else {
-			Log.d(LOG, "invalid BT address");
+			Log.d(TAG, "invalid BT address");
 			return false;
 		}
 		return true;
@@ -238,25 +222,24 @@ public class arduinoBT {
 		if (_bluetoothAdapter != null)
 			_bluetoothAdapter.cancelDiscovery();
 		else {
-			Log.d(LOG, "trying to connect without a BT adapter");
+			Log.d(TAG, "trying to connect without a BT adapter");
 			return false;
 		}
-		// if the socket was used before, we have to close it before trying to
-		// reconnect
+		// if the socket was used before, we have to close it before trying to reconnect
 		// otherwise _scoket.connect() throws exception java.io.IOException:
 		// Device or resource busy
 		if (_socket != null) {
 			try {
 				_socket.close();
 			} catch (IOException ex) {
-				Log.d(LOG, "socket close exeception" + ex);
+				Log.d(TAG, "socket close exeception" + ex);
 			}
 		}
 
 		try {
 			_socket = _bluetoothTarget.createRfcommSocketToServiceRecord(uuid);
 		} catch (IOException ex) {
-			Log.d(LOG, "createRf returned exception " + ex);
+			Log.d(TAG, "createRf returned exception " + ex);
 			return false;
 		}
 
@@ -267,7 +250,7 @@ public class arduinoBT {
 		try {
 			_socket.connect();
 		} catch (IOException ex) {
-			Log.d(LOG, "socket.connect returned exception " + ex);
+			Log.d(TAG, "socket.connect returned exception " + ex);
 			return false;
 		}
 
@@ -275,7 +258,7 @@ public class arduinoBT {
 			_outputStream = _socket.getOutputStream();
 			_inputStream = _socket.getInputStream();
 		} catch (IOException ex) {
-			Log.d(LOG, "getting streams returned exception " + ex.getMessage());
+			Log.d(TAG, "getting streams returned exception " + ex.getMessage());
 			return false;
 		}
 		return true;
@@ -284,17 +267,17 @@ public class arduinoBT {
 	// send a message to the arduino
 	public boolean sendMessage(String msg) {
 		if (_outputStream == null) {
-			Log.d(LOG, "tried to send message with null outputStream ");
+			Log.d(TAG, "tried to send message with null outputStream ");
 			return false;
 		}
 		String msgTest = msg + "#";
-		Log.d(LOG, "message to arduino: " + msgTest);
+		Log.d(TAG, "message to arduino: " + msgTest);
 		try {
 			byte[] byteString = (msgTest + " ").getBytes();
 			byteString[byteString.length - 1] = 0;
 			_outputStream.write(byteString);
 		} catch (IOException e) {
-			Log.d(LOG, "exception from sendMessage: " + e.getMessage());
+			Log.d(TAG, "exception from sendMessage: " + e.getMessage());
 			return false;
 		}
 		return true;
@@ -328,8 +311,7 @@ public class arduinoBT {
 									readBufferPosition = 0;
 									handler.post(new Runnable() {
 										public void run() {
-											Log.d(LOG, "message from arduino: "
-													+ data);
+											Log.d(TAG, "message from arduino: "	+ data);
 											Intent serviceIntent = new Intent();
 											serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
 											serviceIntent.putExtra("messageFromRobot", data);

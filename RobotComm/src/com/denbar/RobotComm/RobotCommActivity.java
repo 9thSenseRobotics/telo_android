@@ -21,7 +21,7 @@ import android.widget.Toast;
 
 public class RobotCommActivity extends Activity {
 
-	private static final String LOG = "RobotCommActivity";
+	private static final String TAG = "RobotCommActivity";
 	public final static String AUTH_C2DM = "authentication";
 	public final static String REGISTERED_C2DM = "registered";
 
@@ -46,7 +46,7 @@ public class RobotCommActivity extends Activity {
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
-		Log.d(LOG, "in onCreate");
+		Log.d(TAG, "in onCreate");
 		Toast.makeText(this, "RobotComm activity created", Toast.LENGTH_SHORT).show();
 
 		_context = this;
@@ -109,7 +109,7 @@ public class RobotCommActivity extends Activity {
 							com.denbar.RobotComm.RobotCommActivity.this,
 							com.denbar.RobotComm.RobotCommService.class);
 						bindService(bindIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-						Log.d(LOG, "Binding to service.");
+						Log.d(TAG, "Binding to service.");
 						editStatus.setText("Bindng to service, try waking it again in a moment");
 					}
 					if (serviceBinder != null)
@@ -138,7 +138,7 @@ public class RobotCommActivity extends Activity {
 					_context.stopService(serviceIntent);
 					if (serviceBinder != null) {
 						unbindService(serviceConnection);
-						Log.d(LOG, "Sleep button clicked, unbinding and shutting down service");
+						Log.d(TAG, "Sleep button clicked, unbinding and shutting down service");
 						serviceBinder= null;
 					}
 					*/
@@ -207,7 +207,7 @@ public class RobotCommActivity extends Activity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		Log.d(LOG, "in onStart");
+		Log.d(TAG, "in onStart");
 		Toast.makeText(this, "RobotComm activty started", Toast.LENGTH_SHORT).show();
 		getPreferences();
 	}
@@ -219,7 +219,7 @@ public class RobotCommActivity extends Activity {
 	// values by simply swapping the strings.xml file, no code changes required.
 
 	private void getPreferences() {
-		Log.d(LOG, "in getPreferences");
+		Log.d(TAG, "in getPreferences");
 		Resources robotResources = getResources();
 		SharedPreferences prefs = getSharedPreferences("RobotPreferences",
 				MODE_WORLD_WRITEABLE);
@@ -257,7 +257,7 @@ public class RobotCommActivity extends Activity {
 	}
 
 	private void Connect() {
-		Log.d(LOG, "in Connect");
+		Log.d(TAG, "in Connect");
 		editStatus.setText("Trying to connect, standby.........");
 		if (EntriesTest()) {
 			editSendToServer.setText("");
@@ -270,11 +270,11 @@ public class RobotCommActivity extends Activity {
 				updateGUI();
 			} else {
 				editStatus.setText("Binding to server failed.");
-				Log.d(LOG, "Binding failed");
+				Log.d(TAG, "Binding failed");
 			}
 		} else {
 			editStatus.setText("Error in user entries, check setup parameters");
-			Log.d(LOG, "Failed entriesTest in Connect");
+			Log.d(TAG, "Failed entriesTest in Connect");
 			Intent startIntent = new Intent(this,
 					com.denbar.RobotComm.credentialsActivity.class);
 			startActivity(startIntent);
@@ -285,19 +285,19 @@ public class RobotCommActivity extends Activity {
 
 	private ServiceConnection serviceConnection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
-			Log.d(LOG, "in onServiceConnected");
+			Log.d(TAG, "in onServiceConnected");
 			serviceBinder = ((com.denbar.RobotComm.RobotCommService.MyBinder) service)
 					.getService();
 		}
 
 		public void onServiceDisconnected(ComponentName className) {
-			Log.d(LOG, "in onServiceDisconnected");
+			Log.d(TAG, "in onServiceDisconnected");
 			serviceBinder = null;
 		}
 	};
 
 	private boolean EntriesTest() {
-		Log.d(LOG, "in EntriesTest");
+		Log.d(TAG, "in EntriesTest");
 		boolean returnResult = true;
 		String message = "There is a error in ";
 		try {
@@ -332,17 +332,17 @@ public class RobotCommActivity extends Activity {
 			returnResult = false;
 		}
 		if (!returnResult) {
-			Log.d(LOG, "failed EntriesTest");
+			Log.d(TAG, "failed EntriesTest");
 			editStatus.setText(message);
 		} else
-			Log.d(LOG, "passed EntriesTest");
+			Log.d(TAG, "passed EntriesTest");
 		return returnResult;
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
-		Log.d(LOG, "in onResume");
+		Log.d(TAG, "in onResume");
 		MyGUItimer.cancel();
 		if (serviceBinder == null)
 		{
@@ -353,7 +353,7 @@ public class RobotCommActivity extends Activity {
 				com.denbar.RobotComm.RobotCommActivity.this,
 				com.denbar.RobotComm.RobotCommService.class);
 			bindService(bindIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-			Log.d(LOG, "Binding to service.");
+			Log.d(TAG, "Binding to service.");
 		}
 		MyGUItimer = new GUItimer();
 		checkStateTimer.scheduleAtFixedRate(MyGUItimer, 0, timerUpdateRate);
@@ -363,25 +363,25 @@ public class RobotCommActivity extends Activity {
 	@Override
 	public void onPause() {
 		super.onPause();
-		Log.d(LOG, "in onPause");
+		Log.d(TAG, "in onPause");
 		MyGUItimer.cancel();
 	}
 
 	@Override
 	public void onStop() {
 		super.onStop();
-		Log.d(LOG, "in onStop");
+		Log.d(TAG, "in onStop");
 		MyGUItimer.cancel();
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		Log.d(LOG, "in onDestroy");
+		Log.d(TAG, "in onDestroy");
 		MyGUItimer.cancel();
 		if (serviceConnection != null) {
 			unbindService(serviceConnection);
-			Log.d(LOG, "Unbinding from service from onDestroy");
+			Log.d(TAG, "Unbinding from service from onDestroy");
 			serviceConnection = null;
 		}
 	}
@@ -397,7 +397,7 @@ public class RobotCommActivity extends Activity {
 		runOnUiThread(new Runnable() {
 			public void run() {
 				if (serviceBinder == null) {
-					Log.d(LOG, "update GUI called when not bound");
+					Log.d(TAG, "update GUI called when not bound");
 					return;
 				}
 				editBluetoothStatus.setText(serviceBinder._bluetoothStatus);
