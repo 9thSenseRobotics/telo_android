@@ -147,6 +147,9 @@ public class RobotCommService extends Service {
 
 		if (intent != null  && (!_sleeping)) // intent is null if it is system restart
 		{
+			// from C2DM server
+			String messageFromC2DM = intent.getStringExtra("C2DMmessage");
+
 			// from the arduino, via arduinoBT, could be just an echo, could be
 			// data
 			String messageFromRobot = intent.getStringExtra("messageFromRobot");
@@ -163,6 +166,11 @@ public class RobotCommService extends Service {
 			String requestServer = intent.getStringExtra("SendToServer");
 
 
+			if (messageFromC2DM != null)
+			{
+				_C2DMstatus = messageFromC2DM;
+				Log.d(TAG, "C2DM message received");
+			}
 			// received a message from the arduino via the bluetooth, intent
 			// sent from arduinoBT
 			if (messageFromRobot != null) {
