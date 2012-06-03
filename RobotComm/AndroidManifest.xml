@@ -43,8 +43,10 @@
             android:name=".StartupIntentReceiver" >
             <intent-filter >
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-
                 <category android:name="android.intent.category.HOME" />
+            </intent-filter>
+            <intent-filter >
+                 <action android:name="com.denbar.action.ROBOT_COMMMAND" />
             </intent-filter>
         </receiver>
         <receiver
@@ -62,56 +64,8 @@
 
         <service android:name=".UpdateWidgetService" >
         </service>
-
-        <activity
-            android:label="C2DM ReceiverActivity"
-            android:name=".C2DM_ReceiverActivity" >
-        </activity>
-
-        <!-- callback for C2DM registration successful (gets the registration ID) -->
-        <receiver android:name=".C2DMRegistrationReceiver" >
-            <intent-filter >
-                <action android:name="com.google.android.c2dm.intent.REGISTRATION" >
-                </action>
-
-                <category android:name="com.denbar.RobotComm" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name=".C2DMMessageReceiver" >
-            <intent-filter >
-                <action android:name="com.google.android.c2dm.intent.RECEIVE" >
-                </action>
-
-                <category android:name="com.denbar.RobotComm" />
-            </intent-filter>
-        </receiver>
-
-        <!-- callback for RETRY on the C2DM registration -->
-        <receiver android:name=".C2DMRegistrationReceiver" >
-            <intent-filter >
-                <action android:name="com.google.android.c2dm.intent.RETRY" />
-
-                <category android:name="com.denbar.RobotComm" />
-            </intent-filter>
-        </receiver>
-
-        <!-- activities -->
-        <activity android:name="RegistrationResultActivity" >
-        </activity>
-        <activity android:name="MessageReceivedActivity" >
-        </activity>
-
-        <!-- startup service that does the registration -->
-        <service android:name=".C2DMRegistrationService" >
-            <intent-filter >
-                <action android:name="com.denbar.RobotComm.C2DMRegistrationService" />
-            </intent-filter>
-        </service>
     </application>
 
-    <uses-permission android:name="com.denbar.RobotComm.permission.C2D_MESSAGE" />
-    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
-    <uses-permission android:name="com.google.android.c2dm.permission.SEND" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"></uses-permission>
@@ -120,9 +74,6 @@
 	<uses-permission android:name="android.permission.WAKE_LOCK"></uses-permission>
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <!-- permission for C2DM API -->
-    <permission
-        android:name="com.denbar.RobotComm.permission.C2D_MESSAGE"
-        android:protectionLevel="signature" />
+
 
 </manifest>

@@ -29,7 +29,7 @@ public class RobotCommService extends Service {
 	private static final String TAG = "RobotCommService";
 	private Handler _Handler = new Handler();
 	private XMPPConnection _connection;
-	private String _robotCommand;
+	private String _robotCommand, _XMPPcommand;
 	private String host, port, service;
 	private String userid, password, bluetooth, recipient, recipientForEcho;
 	private int portNumber;
@@ -46,7 +46,7 @@ public class RobotCommService extends Service {
 	public long _latencyC2DM = 0, _echoReceivedTimeC2DM;
 	public long _latencyBT = 0, _echoReceviedTimeBT, _echoSentTimeBT;
 	private boolean _sleeping = false;
-	private long _timeBTconnectionLost, _timeXMPPconnectionLost, _timeC2DMconnectionLost;
+	private long _timeBTconnectionLost, _timeXMPPconnectionLost, _timeC2DMconnectionLost, _lastTimeValue = 0;
 	private boolean _echoReceivedBT = false, _echoReceivedXMPP = false,	_echoReceivedC2DM = false;
 	private double TIME_OUT_ARDUINO = 30000, TIME_OUT_XMPP = 30000,	TIME_OUT_C2DM = 30000000;
 	private static final long timerUpdateRate = 9000;
@@ -121,9 +121,7 @@ public class RobotCommService extends Service {
 			Toast.makeText(this, "Recovering from abnormal shutdown.....",
 					Toast.LENGTH_LONG).show();
 		}
-
-		Toast.makeText(this, "RobotComm service started", Toast.LENGTH_SHORT)
-				.show();
+		Toast.makeText(this, "RobotComm service started", Toast.LENGTH_SHORT).show();
 
 		// here is where we interpret intents that are aimed at startService
 		// note that commands from the user via RobotCommActivity to the arduino
@@ -168,8 +166,9 @@ public class RobotCommService extends Service {
 
 			if (messageFromC2DM != null)
 			{
-				_C2DMstatus = messageFromC2DM;
-				Log.d(TAG, "C2DM message received");
+				_C2DMstatus = "processing message";
+				processMessageFromServer(messageFromC2DM, "C2DM");
+				Log.d(TAG, "C2DM message received: " + messageFromC2DM);
 			}
 			// received a message from the arduino via the bluetooth, intent
 			// sent from arduinoBT
@@ -630,49 +629,65 @@ public class RobotCommService extends Service {
 	PacketListener createPacketListener()
 	{
 		PacketListener localPacketListener = new PacketListener() {
-		public void processPacket(Packet packet) {
-			Log.d(TAG, "in processPacket");
-			Message message = (Message) packet;
-			if (message.getBody() != null) {
-				String body = message.getBody();
-				if (body.contains("<")) {
-					MessageToRobot myMessage = new MessageToRobot(message
-							.getBody());
-					_robotCommand = myMessage.commandChar
-							+ myMessage.commandArguments;
-				} else
-					_robotCommand = body;
-				Log.d(TAG, "message received in processPacket: "
-						+ _robotCommand);
-				_messageReceivedFromServer = _robotCommand;
+			public void processPacket(Packet packet) {
 
-				_lastXMPPreceivedTime = System.currentTimeMillis();
-				Log
-						.d(TAG,
-								"_lastArduinoReceivedTime updated in processPacket");
-
-				if (_robotCommand.startsWith("!")) // see if it is just an XMPP server echo
-				{
-					_echoReceivedXMPP = true;
-					_echoReceivedTimeXMPP = System.currentTimeMillis(); // just an echo
-					Log
-							.d(TAG,	"_echoReceivedTimeXMPP updated in processPacket");
-				} else // don't send along the message if was just an echo
-				{
+				Message message = (Message) packet;
+				Log.d(TAG, "in processPacket, message: " + message);
+				String testString = message.toString();
+				Log.d(TAG, "in processPacket, testString: " + testString);
+				String testXML = message.toXML();
+				Log.d(TAG, "in processPacket, testXML: " + testXML);
+				if (message.getBody() != null) {
+					_XMPPcommand = message.getBody();
 					_Handler.post(new Runnable() {
 						public void run() {
-							sendDataToArduino(_robotCommand);
-
+							Log.d(TAG, "in processPacket, _XMPPcommand: " + _XMPPcommand);
+							processMessageFromServer(_XMPPcommand, "XMPP");
 						}
 					});
-				}
 
+
+
+					/*if (body.contains("<")) {
+						MessageToRobot myMessage = new MessageToRobot(message
+								.getBody());
+						_robotCommand = myMessage.commandChar
+								+ myMessage.commandArguments;
+					} else
+						_robotCommand = body;
+					Log.d(TAG, "message received in processPacket: "
+							+ _robotCommand);
+					_messageReceivedFromServer = _robotCommand;
+
+					_lastXMPPreceivedTime = System.currentTimeMillis();
+					Log
+							.d(TAG,
+									"_lastArduinoReceivedTime updated in processPacket");
+
+					if (_robotCommand.startsWith("!")) // see if it is just an XMPP server echo
+					{
+						_echoReceivedXMPP = true;
+						_echoReceivedTimeXMPP = System.currentTimeMillis(); // just an echo
+						Log
+								.d(TAG,	"_echoReceivedTimeXMPP updated in processPacket");
+					} else // don't send along the message if was just an echo
+					{
+						_Handler.post(new Runnable() {
+							public void run() {
+								sendDataToArduino(_robotCommand);
+								processMessageFromServer(_XMPPcommand, "XMPP");
+
+							}
+						});
+					}
+				*/
+				}
+				else Log.d(TAG, "in, message.getBody() was null");
 			}
-		}
-	};
+		};
 	return localPacketListener;
 	}
-
+/*
 	// once we are connected, we want to listen for packets
 	// so set up a packet listener
 	// don't know why this does not work when it is in the XMPP class
@@ -690,10 +705,10 @@ public class RobotCommService extends Service {
 				Log.d(TAG, "in processPacket");
 				Message message = (Message) packet;
 				if (message.getBody() != null) {
+					processMessageFromServer(message.getBody(), "XMPP");
 					String body = message.getBody();
 					if (body.contains("<")) {
-						MessageToRobot myMessage = new MessageToRobot(message
-								.getBody());
+						MessageToRobot myMessage = new MessageToRobot(message.getBody());
 						_robotCommand = myMessage.commandChar + myMessage.commandArguments;
 					} else
 						_robotCommand = body;
@@ -701,8 +716,7 @@ public class RobotCommService extends Service {
 					_messageReceivedFromServer = _robotCommand;
 
 					_lastXMPPreceivedTime = System.currentTimeMillis();
-					Log
-							.d(TAG,	"_lastArduinoReceivedTime updated in processPacket");
+					Log.d(TAG,	"_lastXMPPReceivedTime updated in processPacket");
 
 					if (_robotCommand.startsWith("!")) // see if it is just an XMPP server echo
 					{
@@ -745,7 +759,7 @@ public class RobotCommService extends Service {
 			}
 		}, filter);
 	}
-
+*/
 	private void updateWidget() {
 		Log.d(TAG, "in updateWidget");
 		// Build the intent to call the service
@@ -769,13 +783,9 @@ public class RobotCommService extends Service {
 					if (System.currentTimeMillis() - _lastArduinoReceivedTime > TIME_OUT_ARDUINO) {
 						// if we sent a character for echo and heard nothing, we
 						// need to reset BT
-						if (_commFlagBT) {
-							Log
-									.d(TAG,
-											"Arduino comm timed out after an echo request, so we will reset bluetooth");
+						if (_commFlagBT) {Log.d(TAG,"Arduino comm timed out after an echo request, so we will reset bluetooth");
 							Intent serviceIntent = new Intent();
-							serviceIntent
-									.setAction("com.denbar.RobotComm.RobotCommService");
+							serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
 							serviceIntent.putExtra("reset", "bluetooth");
 							_context.startService(serviceIntent);
 						} else {
@@ -791,8 +801,7 @@ public class RobotCommService extends Service {
 							serviceIntent.putExtra("commCheckBT", "c");
 							_echoSentTimeBT = System.currentTimeMillis();
 							Log.d(TAG, "_echoSentTimeBT set");
-							_lastArduinoReceivedTime = System
-									.currentTimeMillis(); // makes us wait for another timeout
+							_lastArduinoReceivedTime = System.currentTimeMillis(); // makes us wait for another timeout
 							Log.d(TAG,"_lastArduinoReceivedTime reset for echo");
 							_context.startService(serviceIntent);
 						}
@@ -890,6 +899,135 @@ public class RobotCommService extends Service {
 				}
 			} else
 				Log.d(TAG, "failed EntriesTest in timer task");
+		}
+	}
+
+	void processMessageFromServer(String messageFromServer, String origin)
+	{
+		Log.d(TAG, "in processMessageFromServer " + messageFromServer);
+		Log.d(TAG, "origin: " + origin);
+		if (origin.contains("XMPP")) return; // Log.d(TAG, "origin contains XMPP");
+		else if (origin.contains("C2DM")) Log.d(TAG, "origin contains C2DM");
+		else Log.d(TAG, "origin is unknown");
+		if (origin.contentEquals("XMPP")) Log.d(TAG, "origin contentEquals XMPP");
+		else if (origin.contentEquals("C2DM")) Log.d(TAG, "origin contentEquals C2DM");
+		else Log.d(TAG, "origin is unknown");
+
+		_robotStatus = origin;
+		String robotCommand = null, timeStamp = null;
+		if (messageFromServer.contains("<"))
+		{
+			MessageToRobot serverMessage = new MessageToRobot(messageFromServer);
+			robotCommand = serverMessage.commandChar + serverMessage.commandArguments;
+			timeStamp = serverMessage.timeStamp;	// note that timeStamp might be null here, careful
+		}
+		else
+		{
+			Log.d(TAG, "in processMessageFromServer, message is not in valid format: " + messageFromServer);
+			return;
+		}
+		if (robotCommand == null)
+		{
+			Log.d(TAG, "in processMessageFromServer, robotCommand is null ");
+			return;
+		}
+		if (timeStamp == null)
+		{
+			Log.d(TAG, "in processMessageFromServer, timeStamp is null ");
+			return;
+		}
+
+		if (robotCommand.startsWith("!")) // see if it is just a server echo
+		{
+			if (origin.contentEquals("XMPP"))
+			{
+					_echoReceivedXMPP = true; // just an echo, don't send it along
+					_echoReceivedTimeXMPP = System.currentTimeMillis();
+					Log.d(TAG, "_echoReceivedTimeXMPP updated in parseMessageFromServer");
+					return;
+			}
+			if (origin.contentEquals("C2DM"))
+			{
+				_echoReceivedC2DM = true;
+				_echoReceivedTimeC2DM = System.currentTimeMillis(); // just an echo, don't send it along
+				Log.d(TAG, "_echoReceivedTimeC2DM updated in parseMessageFromServer");
+				return;
+			}
+			Log.d(TAG, "an echo was received but cannot figure out where from");
+		}
+		// check timestamp to see if we have already processed this message
+		Log.d(TAG, "checking to see if we already processed this message");
+		Log.d(TAG, "timeStamp is: " + timeStamp);
+		int stringLength = timeStamp.length();
+		String frontEnd = "";
+		String backEnd = "";
+		// frm of string is xxxxxx.xxxx
+		if (stringLength >= 5) frontEnd = timeStamp.substring(0, stringLength - 5);
+		if (stringLength >= 4) backEnd = timeStamp.substring(stringLength - 4);
+		timeStamp = frontEnd + backEnd;
+		long timeValue;
+		try  {
+			timeValue = Long.valueOf(timeStamp);
+		}
+		catch (NumberFormatException nfe) {
+			timeValue = 0;
+			Log.d(TAG, "timeStamp is not a long number, it is: " + timeStamp);
+			return;
+		}
+		Log.d(TAG, "timeValue = " + timeValue);
+		if (timeValue == _lastTimeValue)
+		{
+			Log.d(TAG, "message already processed, later arrival was from: " + origin);
+			return;
+		}
+		if (timeValue < _lastTimeValue)
+		{
+			Log.d(TAG, "message is later than multiple messages, origin: " + origin);
+			return;
+		}
+		_lastTimeValue = timeValue;
+		Log.d(TAG, "processing new message, origin: " + origin + "   Message: " + robotCommand + " timeValue = " + timeValue);
+
+		// now we know we have the first arrival of a new command from the server
+		// set the global variable
+		_robotCommand = robotCommand;
+		_messageReceivedFromServer = _robotCommand;
+
+		if (_robotCommand.startsWith("P"))	// server is asking for status check, sleeping or not
+		{
+			Log.d(TAG, "server is asking for status check");
+			String status = "0";
+			if ( (!_sleeping) && (! (_XMPPproblem && _C2DMproblem) ) && (!_bluetoothProblem)) status = "1";
+			sendCommandEchoFromArduino(status, "P");
+			return;
+
+			// this is not from Arduino, but it goes to controller, so we use this call
+		}
+		else if (_robotCommand.startsWith("p"))	// server is asking to toggle sleep state
+		{
+			Log.d(TAG, "server is asking to toggle sleep state");
+			String status = "1";
+			if (_sleeping  && (! (_XMPPproblem && _C2DMproblem) ) && (!_bluetoothProblem))
+			{
+				sendCommandEchoFromArduino(status, "P");
+				wakeUp();
+			}
+			else
+			{
+				status = "0";
+				sendCommandEchoFromArduino(status, "P");
+				sleep();
+			}
+			return;
+		}
+		else if (!_sleeping)	// finally we are able to just send the command to the robot
+		{
+			_Handler.post(new Runnable() {
+				public void run() {
+					Log.d(TAG, "sending command to arduino");
+					sendDataToArduino(_robotCommand);
+				}
+			});
 		}
 	}
 }

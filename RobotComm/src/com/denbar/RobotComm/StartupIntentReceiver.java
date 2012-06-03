@@ -3,6 +3,7 @@ package com.denbar.RobotComm;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 /**
  * Gets the startup intent and calls the service that will register with our
@@ -10,17 +11,28 @@ import android.content.Intent;
  * "hey we just finished booting" code and the registration code
  *
  */
+
+// also gets robot command intents
+
 public class StartupIntentReceiver extends BroadcastReceiver {
+	private final String TAG = "StartupIntentReceiver";
+
 	@Override
 	public void onReceive(Context context, Intent intent) {
+		Log.d(TAG, "in onReceive");
+
 		Intent serviceIntent = new Intent();
 		serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
-		// start up the service that calls for XMPPregistration
-		context.startService(serviceIntent);
 
-		Intent C2DMStartupIntent = new Intent();
-		C2DMStartupIntent.setAction("com.denbar.RobotComm.C2DMRegistrationService");
-		// start up the service that does C2DMregistration
-		context.startService(C2DMStartupIntent);
+
+		// from C2DM server
+		String messageFromC2DM = intent.getStringExtra("robotCommand");
+		if (messageFromC2DM != null)
+		{
+			serviceIntent.putExtra("C2DMmessage", messageFromC2DM);
+			Log.d(TAG, "C2DM message received, forwarding to RobotCommService: " + messageFromC2DM);
+		}
+		// start up the service
+		context.startService(serviceIntent);
 	}
 }

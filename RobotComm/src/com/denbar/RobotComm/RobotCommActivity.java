@@ -55,8 +55,6 @@ public class RobotCommActivity extends Activity {
 		checkStateTimer = new Timer("checkState"); // setup timer
 		MyGUItimer = new GUItimer();
 
-
-
 		setContentView(R.layout.main);
 
 		editRobotName = (EditText) findViewById(R.id.robotname);
