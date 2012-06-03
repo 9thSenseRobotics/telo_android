@@ -17,11 +17,12 @@ public class MicroTime
 	// protocol was originally
 	// implemented in PHP, so, yeah, here we are.
 	{
-		String fullTime = String.valueOf(System.currentTimeMillis()); // get the current epoch time in milliseconds
-		int length = fullTime.length();
+		return String.valueOf(System.currentTimeMillis()); // get the current epoch time in milliseconds
+		/*int length = fullTime.length();
 		// assuming here that length > 2, otherwise we will get a Number
 		String millis = fullTime.substring(length - 2);
 		String seconds = fullTime.substring(0,length - 2);
 		return seconds + "." + millis;
+		*/
 	}
 }
