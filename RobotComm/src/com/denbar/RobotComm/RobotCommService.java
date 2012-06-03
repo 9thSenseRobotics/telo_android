@@ -49,7 +49,7 @@ public class RobotCommService extends Service {
 	private long _timeBTconnectionLost, _timeXMPPconnectionLost, _timeC2DMconnectionLost, _lastTimeValue = 0;
 	private boolean _echoReceivedBT = false, _echoReceivedXMPP = false,	_echoReceivedC2DM = false;
 	private double TIME_OUT_ARDUINO = 30000, TIME_OUT_XMPP = 30000,	TIME_OUT_C2DM = 30000000;
-	private static final long timerUpdateRate = 9000;
+	private static final long timerUpdateRate = 900000;
 	private Timer _ckCommTimer;
 	private checkCommTimer _commTimer;
 	private boolean _commFlagBT = false, _commFlagC2DM = false,	_commFlagXMPP = false;
@@ -904,15 +904,16 @@ public class RobotCommService extends Service {
 
 	void processMessageFromServer(String messageFromServer, String origin)
 	{
-		Log.d(TAG, "in processMessageFromServer " + messageFromServer);
-		Log.d(TAG, "origin: " + origin);
-		if (origin.contains("XMPP")) return; // Log.d(TAG, "origin contains XMPP");
+		Log.d(TAG, "in processMessageFromServer " + messageFromServer + "origin: " + origin);
+		/*
+		if (origin.contains("XMPP")) Log.d(TAG, "origin contains XMPP");
+
 		else if (origin.contains("C2DM")) Log.d(TAG, "origin contains C2DM");
 		else Log.d(TAG, "origin is unknown");
 		if (origin.contentEquals("XMPP")) Log.d(TAG, "origin contentEquals XMPP");
 		else if (origin.contentEquals("C2DM")) Log.d(TAG, "origin contentEquals C2DM");
 		else Log.d(TAG, "origin is unknown");
-
+		*/
 		_robotStatus = origin;
 		String robotCommand = null, timeStamp = null;
 		if (messageFromServer.contains("<"))
@@ -920,6 +921,7 @@ public class RobotCommService extends Service {
 			MessageToRobot serverMessage = new MessageToRobot(messageFromServer);
 			robotCommand = serverMessage.commandChar + serverMessage.commandArguments;
 			timeStamp = serverMessage.timeStamp;	// note that timeStamp might be null here, careful
+			if (timeStamp != null) Log.d(TAG, "in processMessageFromServer, timeStamp: " + timeStamp);
 		}
 		else
 		{
