@@ -47,14 +47,15 @@ public class RobotCommService extends Service {
 	public long _latencyBT = 0, _echoReceviedTimeBT, _echoSentTimeBT;
 	private boolean _sleeping = false;
 	private long _timeBTconnectionLost, _timeXMPPconnectionLost, _timeC2DMconnectionLost, _lastTimeValue = 0;
+	private long _lastArrivalTime = 0;
 	private boolean _echoReceivedBT = false, _echoReceivedXMPP = false,	_echoReceivedC2DM = false;
-	private double TIME_OUT_ARDUINO = 30000, TIME_OUT_XMPP = 30000,	TIME_OUT_C2DM = 30000000;
-	private static final long timerUpdateRate = 900000;
+	private double TIME_OUT_ARDUINO = 30000, TIME_OUT_XMPP = 30000,	TIME_OUT_C2DM = 30000;
+	private static final long timerUpdateRate = 9000;
 	private Timer _ckCommTimer;
 	private checkCommTimer _commTimer;
 	private boolean _commFlagBT = false, _commFlagC2DM = false,	_commFlagXMPP = false;
 	private boolean _bluetoothProblem = false, _C2DMproblem = false, _XMPPproblem = false;
-	private boolean _triedBTconnect = false, _triedXMPPconnect = false,	_triedC2DMconnect = false;
+	private boolean _triedBTconnect = false, _triedXMPPconnect = false; //,	_triedC2DMconnect = false;
 	private Context _context;
 
 	@Override
@@ -108,10 +109,8 @@ public class RobotCommService extends Service {
 				.getString(R.string.password));
 		bluetooth = prefs.getString("bluetooth",
 				robotResources.getString(R.string.bluetooth)).toUpperCase();
-		recipientForEcho = prefs.getString("recipientForEcho", robotResources
-				.getString(R.string.sendCommandEchoServerAddress));
-		recipient = prefs.getString("recipient", robotResources
-				.getString(R.string.sendMessageToXMPPserverAddress));
+		recipientForEcho = prefs.getString("recipientForEcho", robotResources.getString(R.string.sendCommandEchoServerAddress));
+		recipient = prefs.getString("recipient", robotResources.getString(R.string.sendMessageToXMPPserverAddress));
 	}
 
 	@Override
@@ -166,8 +165,7 @@ public class RobotCommService extends Service {
 
 			if (messageFromC2DM != null)
 			{
-				_C2DMstatus = "processing message";
-				processMessageFromServer(messageFromC2DM, "C2DM");
+				processMessageFromC2DMServer(messageFromC2DM);
 				Log.d(TAG, "C2DM message received: " + messageFromC2DM);
 			}
 			// received a message from the arduino via the bluetooth, intent
@@ -191,7 +189,7 @@ public class RobotCommService extends Service {
 					if (messageFromRobot.startsWith("m"))
 						messageToServer(messageFromRobot, "m"); // data from robot was sent
 					else
-						sendCommandEchoFromArduino(messageFromRobot, "a"); // just command echo
+						sendCommandEchoFromArduino(messageFromRobot, "e"); // just command echo
 				}
 			}
 
@@ -216,11 +214,8 @@ public class RobotCommService extends Service {
 			// so it is either a user chat from RobotCommActivity or
 			// a Server comm check requesting an echo
 			if (requestServer != null) {
-				if (requestServer.equals("commCheckServer"))
-					messageToServer(requestServer, "a"); // asking for an echo
-				else
-					messageToServer(requestServer, "m"); // just send data or a
-															// message
+				if (requestServer.equals("commCheckServer")) messageToServer(requestServer, "a"); // asking for an echo
+				else messageToServer(requestServer, "m"); // just send data or a message
 			}
 		} else if (!_sleeping) // the intent was null
 		{
@@ -313,7 +308,7 @@ public class RobotCommService extends Service {
 		// else
 		{
 			_C2DMproblem = true;
-			//_C2DMstatus = "C2DM lost connection";
+			_C2DMstatus = "C2DM lost connection";
 			// _robotStatus = "Not operating";
 			_timeC2DMconnectionLost = System.currentTimeMillis(); // we will set
 																	// up an
@@ -416,7 +411,7 @@ public class RobotCommService extends Service {
 			return false;
 		}
 	}
-
+/*
 	public void connectC2DM() {
 		// attempt a registration
 		Log.d(TAG, "in connectC2DM");
@@ -435,14 +430,20 @@ public class RobotCommService extends Service {
 		startService(intentC2dm);
 
 	}
-
-	public boolean sendCommandEchoFromArduino(String data, String responseValue) {
+*/
+	// this sends a message to controller@9thsense.com
+	// generally just echoing commands that it sent to the arduino
+	// so that controller knows the connection is alive
+	// and it can calculate the latency
+	public boolean sendCommandEchoFromArduino(String data, String responseValue)
+	{
 		if (xmpp == null) {
 			Log.d(TAG, "tried to send data: " + data + " to XMPP server when xmpp not created");
 			return false;
 		}
 		Log.d(TAG, "in sendCommandEchoFromArduino: " + data);
-		if (xmpp.sendCommandEchoFromArduino(data, responseValue)) {
+		if (xmpp.sendCommandEchoFromArduino(data, responseValue))
+		{
 			_messageSentToServer = data;
 			updateWidget();
 			return true;
@@ -450,6 +451,9 @@ public class RobotCommService extends Service {
 		return false;
 	}
 
+	// this message goes to receiver@9thsense.com
+	// if the response value = "a" then the server will send out an echo
+	// if the response value = "m" or anything else, it will just note the message
 	public boolean messageToServer(String data, String responseValue) {
 		if (xmpp == null) {
 			Log.d(TAG, "tried to send data: " + data
@@ -467,10 +471,8 @@ public class RobotCommService extends Service {
 
 	public boolean sendDataToArduino(String robotCommand) {
 		if (BT == null) {
-			Log.d(TAG, "tried to sendDataToArduino: " + robotCommand
-					+ " when BT not created");
-			messageToServer("command received: error: bluetooth not created",
-					recipient); // let the user know
+			Log.d(TAG, "tried to sendDataToArduino: " + robotCommand + " when BT not created");
+			messageToServer("command received: error: bluetooth not created", "m"); // let the user know
 			return false;
 		}
 		Log.d(TAG, "in sendDataToArduino");
@@ -642,7 +644,7 @@ public class RobotCommService extends Service {
 					_Handler.post(new Runnable() {
 						public void run() {
 							Log.d(TAG, "in processPacket, _XMPPcommand: " + _XMPPcommand);
-							processMessageFromServer(_XMPPcommand, "XMPP");
+							processMessageFromXMPPServer(_XMPPcommand);
 						}
 					});
 
@@ -705,7 +707,6 @@ public class RobotCommService extends Service {
 				Log.d(TAG, "in processPacket");
 				Message message = (Message) packet;
 				if (message.getBody() != null) {
-					processMessageFromServer(message.getBody(), "XMPP");
 					String body = message.getBody();
 					if (body.contains("<")) {
 						MessageToRobot myMessage = new MessageToRobot(message.getBody());
@@ -766,6 +767,7 @@ public class RobotCommService extends Service {
 		Intent intent = new Intent(this, UpdateWidgetService.class);
 		intent.putExtra("bluetooth", "    BT: " + _bluetoothStatus);
 		intent.putExtra("XMPP", "    XMPP: " + _XMPPstatus);
+		intent.putExtra("C2DM", "    C2DM: " + _C2DMstatus);
 		intent.putExtra("sentToServer", "    Sent To Server: "
 				+ _messageSentToServer);
 		intent.putExtra("sentToRobot", "    Sent To Robot: "
@@ -849,8 +851,7 @@ public class RobotCommService extends Service {
 						Log.d(TAG, "_latencyXMPP calculated = " + _latencyXMPP);
 					}
 				}
-				if ((!_C2DMproblem) && _triedC2DMconnect) // skip if C2DM is out
-															// or never tried
+				if (!_C2DMproblem) //&& _triedC2DMconnect) // skip if C2DM is out or never tried
 				{
 					if (System.currentTimeMillis() - _lastC2DMreceivedTime > TIME_OUT_C2DM) {
 						if (_commFlagC2DM) {
@@ -892,8 +893,7 @@ public class RobotCommService extends Service {
 					_lastC2DMreceivedTime = System.currentTimeMillis();
 					Log.d(TAG, "_lastC2DMreceivedTime reset for echo");
 					Intent serviceIntent = new Intent();
-					serviceIntent
-							.setAction("com.denbar.RobotComm.RobotCommService");
+					serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
 					serviceIntent.putExtra("SendToServer", "commCheckServer");
 					_context.startService(serviceIntent);
 				}
@@ -902,102 +902,75 @@ public class RobotCommService extends Service {
 		}
 	}
 
-	void processMessageFromServer(String messageFromServer, String origin)
+	void processMessageFromXMPPServer(String messageFromServer)
 	{
-		Log.d(TAG, "in processMessageFromServer " + messageFromServer + "origin: " + origin);
-		/*
-		if (origin.contains("XMPP")) Log.d(TAG, "origin contains XMPP");
-
-		else if (origin.contains("C2DM")) Log.d(TAG, "origin contains C2DM");
-		else Log.d(TAG, "origin is unknown");
-		if (origin.contentEquals("XMPP")) Log.d(TAG, "origin contentEquals XMPP");
-		else if (origin.contentEquals("C2DM")) Log.d(TAG, "origin contentEquals C2DM");
-		else Log.d(TAG, "origin is unknown");
-		*/
-		_robotStatus = origin;
+		Log.d(TAG, "in processMessageFromXMPPServer " + messageFromServer);
 		String robotCommand = null, timeStamp = null;
 		if (messageFromServer.contains("<"))
 		{
 			MessageToRobot serverMessage = new MessageToRobot(messageFromServer);
 			robotCommand = serverMessage.commandChar + serverMessage.commandArguments;
 			timeStamp = serverMessage.timeStamp;	// note that timeStamp might be null here, careful
-			if (timeStamp != null) Log.d(TAG, "in processMessageFromServer, timeStamp: " + timeStamp);
+			if (timeStamp != null) Log.d(TAG, "in processMessageFromXMPPServer, timeStamp: " + timeStamp);
 		}
 		else
 		{
-			Log.d(TAG, "in processMessageFromServer, message is not in valid format: " + messageFromServer);
+			Log.d(TAG, "in processMessageFromXMPPServer, message is not in valid format: " + messageFromServer);
 			return;
 		}
 		if (robotCommand == null)
 		{
-			Log.d(TAG, "in processMessageFromServer, robotCommand is null ");
+			Log.d(TAG, "in processMessageFromXMPPServer, robotCommand is null ");
 			return;
 		}
 		if (timeStamp == null)
 		{
-			Log.d(TAG, "in processMessageFromServer, timeStamp is null ");
+			Log.d(TAG, "in processMessageFromXMPPServer, timeStamp is null ");
 			return;
 		}
 
 		if (robotCommand.startsWith("!")) // see if it is just a server echo
 		{
-			if (origin.contentEquals("XMPP"))
-			{
 					_echoReceivedXMPP = true; // just an echo, don't send it along
 					_echoReceivedTimeXMPP = System.currentTimeMillis();
-					Log.d(TAG, "_echoReceivedTimeXMPP updated in parseMessageFromServer");
+					Log.d(TAG, "in processMessageFromXMPPServer, _echoReceivedTimeXMPP updated ");
 					return;
-			}
-			if (origin.contentEquals("C2DM"))
-			{
-				_echoReceivedC2DM = true;
-				_echoReceivedTimeC2DM = System.currentTimeMillis(); // just an echo, don't send it along
-				Log.d(TAG, "_echoReceivedTimeC2DM updated in parseMessageFromServer");
-				return;
-			}
-			Log.d(TAG, "an echo was received but cannot figure out where from");
 		}
 		// check timestamp to see if we have already processed this message
-		Log.d(TAG, "checking to see if we already processed this message");
-		Log.d(TAG, "timeStamp is: " + timeStamp);
-		int stringLength = timeStamp.length();
-		String frontEnd = "";
-		String backEnd = "";
-		// frm of string is xxxxxx.xxxx
-		if (stringLength >= 5) frontEnd = timeStamp.substring(0, stringLength - 5);
-		if (stringLength >= 4) backEnd = timeStamp.substring(stringLength - 4);
-		timeStamp = frontEnd + backEnd;
+		Log.d(TAG, "in processMessageFromXMPPServer, testing for previous timeStamp: " + timeStamp);
 		long timeValue;
 		try  {
 			timeValue = Long.valueOf(timeStamp);
 		}
 		catch (NumberFormatException nfe) {
 			timeValue = 0;
-			Log.d(TAG, "timeStamp is not a long number, it is: " + timeStamp);
+			Log.d(TAG, "in processMessageFromXMPPServer, timeStamp is not a long number, it is: " + timeStamp);
 			return;
 		}
-		Log.d(TAG, "timeValue = " + timeValue);
+		Log.d(TAG, "in processMessageFromXMPPServer  timeValue = " + timeValue);
 		if (timeValue == _lastTimeValue)
 		{
-			Log.d(TAG, "message already processed, later arrival was from: " + origin);
+			long delayTime = System.currentTimeMillis() - _lastArrivalTime;
+			Log.d(TAG, "in processMessageFromXMPPServer, message arrived " + delayTime + " msec later than C2DM one");
 			return;
 		}
 		if (timeValue < _lastTimeValue)
 		{
-			Log.d(TAG, "message is later than multiple messages, origin: " + origin);
+			Log.d(TAG, "in processMessageFromXMPPServer, message is later than multiple messages");
 			return;
 		}
 		_lastTimeValue = timeValue;
-		Log.d(TAG, "processing new message, origin: " + origin + "   Message: " + robotCommand + " timeValue = " + timeValue);
+		Log.d(TAG, "in processMessageFromXMPPServer, processing new message: " + robotCommand + " timeValue = " + timeValue);
 
 		// now we know we have the first arrival of a new command from the server
 		// set the global variable
 		_robotCommand = robotCommand;
 		_messageReceivedFromServer = _robotCommand;
+		_lastArrivalTime = System.currentTimeMillis();
 
 		if (_robotCommand.startsWith("P"))	// server is asking for status check, sleeping or not
 		{
-			Log.d(TAG, "server is asking for status check");
+			Log.d(TAG, "in processMessageFromXMPPServer,server is asking for status check");
 			String status = "0";
 			if ( (!_sleeping) && (! (_XMPPproblem && _C2DMproblem) ) && (!_bluetoothProblem)) status = "1";
 			sendCommandEchoFromArduino(status, "P");
@@ -1007,7 +980,7 @@ public class RobotCommService extends Service {
 		}
 		else if (_robotCommand.startsWith("p"))	// server is asking to toggle sleep state
 		{
-			Log.d(TAG, "server is asking to toggle sleep state");
+			Log.d(TAG, "in processMessageFromXMPPServer, server is asking to toggle sleep state");
 			String status = "1";
 			if (_sleeping  && (! (_XMPPproblem && _C2DMproblem) ) && (!_bluetoothProblem))
 			{
@@ -1026,7 +999,118 @@ public class RobotCommService extends Service {
 		{
 			_Handler.post(new Runnable() {
 				public void run() {
-					Log.d(TAG, "sending command to arduino");
+					Log.d(TAG, "in processMessageFromXMPPServer, sending command to arduino");
+					sendDataToArduino(_robotCommand);
+				}
+			});
+		}
+	}
+
+
+	void processMessageFromC2DMServer(String messageFromServer)
+	{
+		Log.d(TAG, "in processMessageFromC2DMServer " + messageFromServer);
+
+		String robotCommand = null, timeStamp = null;
+		if (messageFromServer.contains("<"))
+		{
+			MessageToRobot serverMessage = new MessageToRobot(messageFromServer);
+			robotCommand = serverMessage.commandChar + serverMessage.commandArguments;
+			timeStamp = serverMessage.timeStamp;	// note that timeStamp might be null here, careful
+			if (timeStamp != null) Log.d(TAG, "in processMessageFromC2DMServer, timeStamp: " + timeStamp);
+		}
+		else
+		{
+			Log.d(TAG, "in processMessageFromC2DMServer, message is not in valid format: " + messageFromServer);
+			return;
+		}
+		if (robotCommand == null)
+		{
+			Log.d(TAG, "in processMessageFromC2DMServer, robotCommand is null ");
+			return;
+		}
+		if (timeStamp == null)
+		{
+			Log.d(TAG, "in processMessageFromC2DMServer, timeStamp is null ");
+			return;
+		}
+
+		if (robotCommand.startsWith("!")) // see if it is just a server echo
+		{
+
+				_echoReceivedC2DM = true;
+				_echoReceivedTimeC2DM = System.currentTimeMillis(); // just an echo, don't send it along
+				Log.d(TAG, "_echoReceivedTimeC2DM updated in parseMessageFromC2DMServer");
+				return;
+
+		}
+		// check timestamp to see if we have already processed this message
+		Log.d(TAG, "checking to see if we already processed this message");
+		Log.d(TAG, "in processMessageFromC2DMServer, testing for previous timeStamp: " + timeStamp);
+
+		long timeValue;
+		try  {
+			timeValue = Long.valueOf(timeStamp);
+		}
+		catch (NumberFormatException nfe) {
+			timeValue = 0;
+			Log.d(TAG, "in processMessageFromC2DMServer, timeStamp is not a long number, it is: " + timeStamp);
+			return;
+		}
+		Log.d(TAG, "in processMessageFromC2DMServer  timeValue = " + timeValue);
+		if (timeValue == _lastTimeValue)
+		{
+			long delayTime = System.currentTimeMillis() - _lastArrivalTime;
+			Log.d(TAG, "in processMessageFromXMPPServer, message arrived " + delayTime + " msec later than XMPP one");
+
+			return;
+		}
+		if (timeValue < _lastTimeValue)
+		{
+			Log.d(TAG, "in processMessageFromC2DMServer, message is later than multiple messages");
+			return;
+		}
+		_lastTimeValue = timeValue;
+		Log.d(TAG, "in processMessageFromC2DMServer, processing new message: " + robotCommand + " timeValue = " + timeValue);
+
+		// now we know we have the first arrival of a new command from the server
+		// set the global variable
+		_robotCommand = robotCommand;
+		_messageReceivedFromServer = _robotCommand;
+		_lastArrivalTime = System.currentTimeMillis();
+
+		if (_robotCommand.startsWith("P"))	// server is asking for status check, sleeping or not
+		{
+			Log.d(TAG, "in processMessageFromC2DMServer,server is asking for status check");
+			String status = "0";
+			if ( (!_sleeping) && (! (_XMPPproblem && _C2DMproblem) ) && (!_bluetoothProblem)) status = "1";
+			sendCommandEchoFromArduino(status, "P");
+			return;
+
+			// this is not from Arduino, but it goes to controller, so we use this call
+		}
+		else if (_robotCommand.startsWith("p"))	// server is asking to toggle sleep state
+		{
+			Log.d(TAG, "in processMessageFromC2DMServer, server is asking to toggle sleep state");
+			String status = "1";
+			if (_sleeping  && (! (_XMPPproblem && _C2DMproblem) ) && (!_bluetoothProblem))
+			{
+				sendCommandEchoFromArduino(status, "P");
+				wakeUp();
+			}
+			else
+			{
+				status = "0";
+				sendCommandEchoFromArduino(status, "P");
+				sleep();
+			}
+			return;
+		}
+		else if (!_sleeping)	// finally we are able to just send the command to the robot
+		{
+			_Handler.post(new Runnable() {
+				public void run() {
+					Log.d(TAG, "in processMessageFromC2DMServer, sending command to arduino");
 					sendDataToArduino(_robotCommand);
 				}
 			});

@@ -10,7 +10,7 @@ import android.widget.RemoteViews;
 
 public class UpdateWidgetService extends Service {
 	private static final String LOG = "UpdatewidgetService";
-	private String _XMPPstatus, _bluetoothStatus, _sentToRobot, _sentToServer;
+	private String _XMPPstatus, _C2DMstatus, _bluetoothStatus, _sentToRobot, _sentToServer;
 	private AppWidgetManager appWidgetManager;
 	private RemoteViews remoteViews;
 
@@ -18,10 +18,8 @@ public class UpdateWidgetService extends Service {
 	public void onCreate() {
 		super.onCreate();
 		Log.d(LOG, "in onCreate");
-		appWidgetManager = AppWidgetManager.getInstance(this
-				.getApplicationContext());
-		remoteViews = new RemoteViews(this.getApplicationContext()
-				.getPackageName(), R.layout.widget_layout);
+		appWidgetManager = AppWidgetManager.getInstance(this.getApplicationContext());
+		remoteViews = new RemoteViews(this.getApplicationContext().getPackageName(), R.layout.widget_layout);
 
 	}
 
@@ -33,6 +31,7 @@ public class UpdateWidgetService extends Service {
 		int[] allWidgetIds2 = appWidgetManager.getAppWidgetIds(thisWidget);
 
 		_XMPPstatus = intent.getStringExtra("XMPP");
+		_C2DMstatus = intent.getStringExtra("C2DM");
 		_bluetoothStatus = intent.getStringExtra("bluetooth");
 		_sentToServer = intent.getStringExtra("sentToServer");
 		_sentToRobot = intent.getStringExtra("sentToRobot");
@@ -40,6 +39,8 @@ public class UpdateWidgetService extends Service {
 		for (int widgetId : allWidgetIds2) {
 			if (_XMPPstatus != null)
 				remoteViews.setTextViewText(R.id.XMPP, _XMPPstatus);
+			if (_C2DMstatus != null)
+				remoteViews.setTextViewText(R.id.C2DM, _C2DMstatus);
 			if (_bluetoothStatus != null)
 				remoteViews.setTextViewText(R.id.bluetooth, _bluetoothStatus);
 			if (_sentToServer != null)
