@@ -285,8 +285,7 @@ public class arduinoBT {
 
 	private void ListenForData() {
 		final Handler handler = new Handler();
-		final byte delimiter = 10; // This is the ASCII code for a newline
-									// character
+		final byte delimiter = 10; // This is the ASCII code for a newline character
 
 		stopWorker = false;
 		readBufferPosition = 0;
@@ -315,9 +314,6 @@ public class arduinoBT {
 											Intent serviceIntent = new Intent();
 											serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
 											serviceIntent.putExtra("messageFromRobot", data);
-											// if (data.startsWith("echo"))
-											// _echoReceivedTime =
-											// System.currentTimeMillis();
 											_context.startService(serviceIntent);
 										}
 									});

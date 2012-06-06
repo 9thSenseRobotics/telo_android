@@ -402,11 +402,9 @@ public class RobotCommActivity extends Activity {
 				editXMPPstatus.setText(serviceBinder._XMPPstatus);
 				editC2DMstatus.setText(serviceBinder._C2DMstatus);
 				editStatus.setText(serviceBinder._robotStatus);
-				editReceivedFromServer
-						.setText(serviceBinder._messageReceivedFromServer);
+				editReceivedFromServer.setText(serviceBinder._messageReceivedFromServer);
 				editSentToServer.setText(serviceBinder._messageSentToServer);
-				editReceivedFromRobot
-						.setText(serviceBinder._messageReceivedFromRobot);
+				editReceivedFromRobot.setText(serviceBinder._messageReceivedFromRobot);
 				editSentToRobot.setText(serviceBinder._messageSentToRobot);
 			}
 		});

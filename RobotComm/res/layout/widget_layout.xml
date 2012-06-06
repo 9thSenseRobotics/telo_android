@@ -30,7 +30,7 @@
                 style="@android:style/TextAppearance.Medium"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="4dip"
+                android:layout_margin="10dip"
                 android:text="@string/version" >
             </TextView>
 

@@ -7,7 +7,7 @@
     <string name="port">5222</string>
     <string name="service">9thsense.com</string>
     <string name="userid">not set</string>
-    <string name="password">not set</string>
+    <string name="password">9thsense</string>
     <string name="bluetooth">00:06:66:46:5A:91</string>
     <string name="recipient">controller@9thsense.com</string>
     <string name="sendCommandEchoServerAddress">controller@9thsense.com</string>
@@ -16,7 +16,7 @@
     <string name="preferencesStatus">not saved yet</string>
     <string name="quit">Quit</string>
     <string name="help">Help</string>
-    <string name="version">RobotComm v0.55</string>
+    <string name="version">  RobotComm v0.56</string>
 
     <color name="background_color">#000000</color>
     <color name="axes_color">#FFFFFF</color>

@@ -168,7 +168,7 @@
 
         <EditText
             android:id="@+id/sentToRobot"
-            android:layout_width="199dp"
+            android:layout_width="fill_parent"
             android:layout_height="match_parent"
             android:autoText="false"
             android:capitalize="none"
@@ -237,7 +237,7 @@
 
         <EditText
             android:id="@+id/receivedFromServer"
-            android:layout_width="199dp"
+            android:layout_width="fill_parent"
             android:layout_height="match_parent"
             android:autoText="false"
             android:capitalize="none"

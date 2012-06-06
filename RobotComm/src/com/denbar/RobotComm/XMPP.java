@@ -62,8 +62,7 @@ public class XMPP {
 			Log.e(TAG, "[SettingsDialog] Failed to connect to "
 					+ connection.getHost());
 			Log.e(TAG, ex.toString());
-			Toast.makeText(_context, "XMPP Server connection failed",
-					Toast.LENGTH_SHORT).show();
+			Toast.makeText(_context, "XMPP Server connection failed", Toast.LENGTH_SHORT).show();
 			return false;
 		}
 		try {
@@ -75,15 +74,11 @@ public class XMPP {
 			presence.setStatus("Robot v1.0");
 			connection.sendPacket(presence);
 			_connection = connection;
-			Toast.makeText(_context, "XMPP Log in successful",
-					Toast.LENGTH_SHORT).show();
-			// now that we have a connection, we need to set up a packet
-			// listener
-			// setupPacketListener();
+			Toast.makeText(_context, "XMPP Log in successful", Toast.LENGTH_SHORT).show();
+			// now that we have a connection, we need to set up a packet listener setupPacketListener();
 			return true;
 		} catch (XMPPException ex) {
-			Toast.makeText(_context, "XMPP Server login failed",
-					Toast.LENGTH_SHORT).show();
+			Toast.makeText(_context, "XMPP Server login failed", Toast.LENGTH_SHORT).show();
 			Log.e(TAG, "[SettingsDialog] Failed to log in as " + _userid);
 			Log.e(TAG, ex.toString());
 			_connection = null;
@@ -103,31 +98,6 @@ public class XMPP {
 		return _connection;
 	}
 
-	/*
-	 * // once we are connected, we want to listen for packets // so set up a
-	 * packet listener private void setupPacketListener() { if (_connection ==
-	 * null) { Log.d(TAG,
-	 * "tried to setup packetListener with no connectoin present"); return; } //
-	 * Add a packet listener to get messages sent to us Toast.makeText(_context,
-	 * "Setting up packet listener", Toast.LENGTH_SHORT).show(); PacketFilter
-	 * filter = new MessageTypeFilter(Message.Type.chat);
-	 * _connection.addPacketListener(new PacketListener() { public void
-	 * processPacket(Packet packet) { Toast.makeText(_context,
-	 * "packet received", Toast.LENGTH_SHORT).show(); Message message =
-	 * (Message) packet; if (message.getBody() != null) { String body =
-	 * message.getBody(); if (body.contains("<")) { MessageToRobot myMessage =
-	 * new MessageToRobot(message.getBody()); _robotCommand =
-	 * myMessage.commandChar; _robotArguments = myMessage.commandArguments; }
-	 * else { _robotCommand = body; _robotArguments = null; }
-	 * Toast.makeText(_context, "XMPP message received: " + _robotCommand,
-	 * Toast.LENGTH_LONG).show(); _Handler.post(new Runnable() { public void
-	 * run() { Intent serviceIntent = new Intent();
-	 * serviceIntent.setAction("com.denbar.RobotComm.RobotCommService"); if
-	 * (_robotArguments != null) { serviceIntent.putExtra("robotCommand",
-	 * _robotCommand + _robotArguments); } else {
-	 * serviceIntent.putExtra("robotCommand", _robotCommand); }
-	 * _context.startService(serviceIntent); } }); //} } } }, filter); }
-	 */
 
 	// echos the command that the server sent, as the echo comes back from the
 	// arduino
@@ -138,10 +108,8 @@ public class XMPP {
 			Log.d(TAG, "tried to send XMPP message when not connected");
 			return false;
 		}
-		MessageFromRobot responseMessage = new MessageFromRobot(
-				_recipientForEcho, _userid + "@9thsense.com", responseValue, data);
-		Log
-				.i(TAG, "Sending text [" + data + "] to [" + _recipientForEcho + "]");
+		MessageFromRobot responseMessage = new MessageFromRobot(_recipientForEcho, _userid + "@9thsense.com", responseValue, data);
+		Log.d(TAG, "Sending text [" + data + "] to [" + _recipientForEcho + "]");
 		Message msg = new Message(_recipientForEcho, Message.Type.chat);
 		msg.setBody(responseMessage.XMLStr);
 		try {

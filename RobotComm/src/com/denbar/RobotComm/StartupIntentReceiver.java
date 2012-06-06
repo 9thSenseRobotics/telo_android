@@ -32,6 +32,11 @@ public class StartupIntentReceiver extends BroadcastReceiver {
 			serviceIntent.putExtra("C2DMmessage", messageFromC2DM);
 			Log.d(TAG, "C2DM message received, forwarding to RobotCommService: " + messageFromC2DM);
 		}
+		else
+		{
+			serviceIntent.putExtra("Bootup", "connect");
+			Log.d(TAG, "bootup complete, sending intent to RobotCommService to connect");
+		}
 		// start up the service
 		context.startService(serviceIntent);
 	}

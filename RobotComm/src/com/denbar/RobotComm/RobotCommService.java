@@ -11,7 +11,6 @@ import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 
-import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
@@ -55,7 +54,7 @@ public class RobotCommService extends Service {
 	private checkCommTimer _commTimer;
 	private boolean _commFlagBT = false, _commFlagC2DM = false,	_commFlagXMPP = false;
 	private boolean _bluetoothProblem = false, _C2DMproblem = false, _XMPPproblem = false;
-	private boolean _triedBTconnect = false, _triedXMPPconnect = false; //,	_triedC2DMconnect = false;
+	private boolean _triedBTconnect = false, _triedXMPPconnect = false, _triedC2DMconnect = false;
 	private Context _context;
 
 	@Override
@@ -86,9 +85,9 @@ public class RobotCommService extends Service {
 		_lastArduinoReceivedTime = System.currentTimeMillis();
 		Log.d(TAG, "_lastArduinoReceivedTime initialized");
 		_lastXMPPreceivedTime = System.currentTimeMillis();
-		Log.d(TAG, "_lastArduinoReceivedTime initialized");
+		Log.d(TAG, "_lastXMPPreceivedTime initialized");
 		_lastC2DMreceivedTime = System.currentTimeMillis();
-		Log.d(TAG, "_lastArduinoReceivedTime initialized");
+		Log.d(TAG, "_lastC2DMreceivedTime initialized");
 		_commTimer = new checkCommTimer();
 		_ckCommTimer = new Timer("ckComm");
 		_ckCommTimer.scheduleAtFixedRate(_commTimer, 0, timerUpdateRate);
@@ -117,8 +116,7 @@ public class RobotCommService extends Service {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.d(TAG, "in onStartCommand");
 		if ((flags & START_FLAG_RETRY) == 0) {
-			Toast.makeText(this, "Recovering from abnormal shutdown.....",
-					Toast.LENGTH_LONG).show();
+			Toast.makeText(this, "Recovering from abnormal shutdown.....", Toast.LENGTH_LONG).show();
 		}
 		Toast.makeText(this, "RobotComm service started", Toast.LENGTH_SHORT).show();
 
@@ -161,6 +159,9 @@ public class RobotCommService extends Service {
 			// from either RobotCommActivity (user chat) or from this service,
 			// sending out a server comm check
 			String requestServer = intent.getStringExtra("SendToServer");
+
+			// from StartupIntentReceiver, boot up is done and it is time to connect
+			String bootup = intent.getStringExtra("Bootup");
 
 
 			if (messageFromC2DM != null)
@@ -217,23 +218,28 @@ public class RobotCommService extends Service {
 				if (requestServer.equals("commCheckServer")) messageToServer(requestServer, "a"); // asking for an echo
 				else messageToServer(requestServer, "m"); // just send data or a message
 			}
-		} else if (!_sleeping) // the intent was null
-		{
+
 			// this else will run on system start or restart,
 			// so we check connections and, if they are good,
 			// we let the XMPP server know we are up
-			if (EntriesTest()) {
-				if (BT == null)	connectBluetooth(bluetooth);
-				else if (!BT.getConnectionState()) connectBluetooth(bluetooth);
-				if (xmpp == null) connectXMPP();
-				else if (!xmpp.getConnectionState()) connectXMPP();
-				if (BT != null && xmpp != null)
-				{
-					if (BT.getConnectionState() && xmpp.getConnectionState())
-					messageToServer("<m><re>1.0</re></m>", recipientForEcho);
-				}
-			} else
-				Log.d(TAG, "Failed entriesTest in onStart");
+			if (bootup != null)
+			{
+				if (EntriesTest()) {
+					Log.d(TAG, "Connecting to servers and BT");
+					if (BT == null)	connectBluetooth(bluetooth);
+					else if (!BT.getConnectionState()) connectBluetooth(bluetooth);
+					if (xmpp == null) connectXMPP();
+					else if (!xmpp.getConnectionState()) connectXMPP();
+					if (BT != null && xmpp != null)
+					{
+						if (BT.getConnectionState() && xmpp.getConnectionState())
+						messageToServer("<m><re>1.0</re></m>", recipientForEcho);
+					}
+				} else	Log.d(TAG, "Failed entriesTest in onStartCommand");
+			}
+		} else if (!_sleeping) // the intent was null
+		{
+			Log.d(TAG, "in onStartCommand with null intent");
 		}
 		return Service.START_STICKY; // service will restart after being terminated by the runtime
 	}
@@ -254,11 +260,7 @@ public class RobotCommService extends Service {
 				_echoReceivedBT = false;
 				_bluetoothStatus = "Hardware problem, check power";
 				_robotStatus = "Not operating";
-				_timeBTconnectionLost = System.currentTimeMillis(); // we will
-																	// set up an
-																	// alarm to
-																	// periodically
-																	// retry
+				_timeBTconnectionLost = System.currentTimeMillis(); // we will set up an alarm to periodically retry
 			}
 		}
 	}
@@ -306,19 +308,15 @@ public class RobotCommService extends Service {
 		// Log.d(TAG, "_lastC2DMreceivedTime set in tryResetXMPP");
 		// }
 		// else
-		{
-			_C2DMproblem = true;
-			_C2DMstatus = "C2DM lost connection";
+		//{
+			//_C2DMproblem = true;
+			//_C2DMstatus = "lost connection";
 			// _robotStatus = "Not operating";
-			_timeC2DMconnectionLost = System.currentTimeMillis(); // we will set
-																	// up an
-																	// alarm to
-																	// periodically
-																	// retry
-			Log.d(TAG, "resetting C2DM failed");
-		}
-		_commFlagC2DM = false;
-		_echoReceivedC2DM = false;
+			_timeC2DMconnectionLost = System.currentTimeMillis(); // we will set up an alarm to periodically retry
+			//Log.d(TAG, "resetting C2DM failed");
+		//}
+		//_commFlagC2DM = false;
+		//_echoReceivedC2DM = false;
 	}
 
 	public void connectBluetooth(String bluetoothAddress) {
@@ -352,9 +350,7 @@ public class RobotCommService extends Service {
 			Toast.makeText(this, "Bluetooth connected", Toast.LENGTH_SHORT)
 					.show();
 		} else {
-			Toast.makeText(this,
-					"Bluetooth connection failed, opening RobotCommActivity",
-					Toast.LENGTH_LONG).show();
+			Toast.makeText(this, "Bluetooth connection failed, opening RobotCommActivity", Toast.LENGTH_LONG).show();
 			Log.d(TAG, "bluetooth connection failed");
 			_bluetoothStatus = "Connection failed";
 			updateWidget();
@@ -370,6 +366,7 @@ public class RobotCommService extends Service {
 			return false;
 		}
 		_triedXMPPconnect = true;
+		_triedC2DMconnect = true;
 		if (xmpp.getConnectionState()) {
 			_XMPPstatus = "still connected";
 			updateWidget();
@@ -398,9 +395,7 @@ public class RobotCommService extends Service {
 			_connection.addPacketListener(_packetListener, filter);
 			return true;
 		} else {
-			Toast.makeText(this,
-					"XMPP connection failed, opening RobotCommActivity",
-					Toast.LENGTH_LONG).show();
+			Toast.makeText(this, "XMPP connection failed, opening RobotCommActivity", Toast.LENGTH_LONG).show();
 			Log.d(TAG, "XMPP connection failed");
 			_XMPPstatus = "Not connected";
 			updateWidget();
@@ -477,9 +472,10 @@ public class RobotCommService extends Service {
 		}
 		Log.d(TAG, "in sendDataToArduino");
 		if (BT._isConnected) {
-			Toast.makeText(this, robotCommand, Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, "Sending command to robot: " + robotCommand, Toast.LENGTH_SHORT).show();
 			if (BT.sendMessage(robotCommand)) {
-				_messageSentToRobot = robotCommand;
+				if (_messageSentToRobot.length() > 80) _messageSentToRobot = _messageSentToRobot.substring(5);
+				_messageSentToRobot = robotCommand + " " + _messageSentToRobot;
 				updateWidget();
 				return true;
 			} else
@@ -768,10 +764,8 @@ public class RobotCommService extends Service {
 		intent.putExtra("bluetooth", "    BT: " + _bluetoothStatus);
 		intent.putExtra("XMPP", "    XMPP: " + _XMPPstatus);
 		intent.putExtra("C2DM", "    C2DM: " + _C2DMstatus);
-		intent.putExtra("sentToServer", "    Sent To Server: "
-				+ _messageSentToServer);
-		intent.putExtra("sentToRobot", "    Sent To Robot: "
-				+ _messageSentToRobot);
+		intent.putExtra("sentToServer", "    Sent To Server: " + _messageSentToServer);
+		intent.putExtra("sentToRobot", "    Sent To Robot: " + _messageSentToRobot);
 		this.startService(intent);
 	}
 
@@ -851,7 +845,7 @@ public class RobotCommService extends Service {
 						Log.d(TAG, "_latencyXMPP calculated = " + _latencyXMPP);
 					}
 				}
-				if (!_C2DMproblem) //&& _triedC2DMconnect) // skip if C2DM is out or never tried
+				if ((!_C2DMproblem) && _triedC2DMconnect) // skip if C2DM is out or never tried
 				{
 					if (System.currentTimeMillis() - _lastC2DMreceivedTime > TIME_OUT_C2DM) {
 						if (_commFlagC2DM) {
@@ -862,8 +856,13 @@ public class RobotCommService extends Service {
 							_context.startService(serviceIntent);
 						} else {
 							Log.d(TAG, "C2DM comm timed out, so we will request and echo to see if C2DM is still connected");
-							_C2DMstatus = "Checking C2DM connection";
+							// wake up the app, just to be sure it is running
+							//Intent C2DMIntent = new Intent();
+							//C2DMIntent.setAction("com.denbar.C2DM_Receiver.TeloStartupIntentReceiver.WAKEUP");
+							//C2DMIntent.putExtra("wakeup", "RobotCommService");
+							//_context.sendBroadcast(C2DMIntent);
 							sendServerEcho = true;
+							_C2DMstatus = "Checking C2DM connection";
 						}
 					} else if (_echoReceivedC2DM) {
 						Log.d(TAG, "C2DM echo came back good");
@@ -965,7 +964,9 @@ public class RobotCommService extends Service {
 		// now we know we have the first arrival of a new command from the server
 		// set the global variable
 		_robotCommand = robotCommand;
-		_messageReceivedFromServer = _robotCommand;
+		if (_messageReceivedFromServer.length() > 80) _messageReceivedFromServer = _messageReceivedFromServer.substring(5);
+		_messageReceivedFromServer = robotCommand + " " + _messageReceivedFromServer;
+		//_messageReceivedFromServer = _robotCommand;
 		_lastArrivalTime = System.currentTimeMillis();
 
 		if (_robotCommand.startsWith("P"))	// server is asking for status check, sleeping or not
@@ -1037,12 +1038,10 @@ public class RobotCommService extends Service {
 
 		if (robotCommand.startsWith("!")) // see if it is just a server echo
 		{
-
-				_echoReceivedC2DM = true;
-				_echoReceivedTimeC2DM = System.currentTimeMillis(); // just an echo, don't send it along
-				Log.d(TAG, "_echoReceivedTimeC2DM updated in parseMessageFromC2DMServer");
-				return;
-
+			_echoReceivedC2DM = true; // just an echo, don't send it along
+			_echoReceivedTimeC2DM = System.currentTimeMillis(); // just an echo, don't send it along
+			Log.d(TAG, "in processMessageFromC2DMServer, _echoReceivedTimeC2DM updated");
+			return;
 		}
 		// check timestamp to see if we have already processed this message
 		Log.d(TAG, "checking to see if we already processed this message");
