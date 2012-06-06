@@ -1,5 +1,5 @@
 Modifications made to Amarino_2
-
+testgit
 in AmarinoService.java
 
 added a function and a call to say when communications are halted.
