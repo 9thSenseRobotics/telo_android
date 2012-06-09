@@ -341,7 +341,7 @@ public class RobotCommActivity extends Activity {
 	public void onResume() {
 		super.onResume();
 		Log.d(TAG, "in onResume");
-		MyGUItimer.cancel();
+		if (MyGUItimer != null) MyGUItimer.cancel();
 		if (serviceBinder == null)
 		{
 			// bind to service
@@ -362,21 +362,21 @@ public class RobotCommActivity extends Activity {
 	public void onPause() {
 		super.onPause();
 		Log.d(TAG, "in onPause");
-		MyGUItimer.cancel();
+		if (MyGUItimer != null) MyGUItimer.cancel();
 	}
 
 	@Override
 	public void onStop() {
 		super.onStop();
 		Log.d(TAG, "in onStop");
-		MyGUItimer.cancel();
+		if (MyGUItimer != null) MyGUItimer.cancel();
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		Log.d(TAG, "in onDestroy");
-		MyGUItimer.cancel();
+		if (MyGUItimer != null) MyGUItimer.cancel();
 		if (serviceConnection != null) {
 			unbindService(serviceConnection);
 			Log.d(TAG, "Unbinding from service from onDestroy");

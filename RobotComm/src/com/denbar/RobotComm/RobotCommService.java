@@ -130,14 +130,14 @@ public class RobotCommService extends Service {
 
 		// With regard to messages that are going out to the server
 		// from this service via XMPP.java,
-		// currently there are two commands you can issue: ‘a’ (for “alive”) and
-		// ‘m’ (for “message”).
+		// currently there are two commands you can issue: a for alive) and
+		// m (for message).
 		// The command should go into MessageFromRobot.responseValue and get
 		// sent to receiver@9thsense.com.
-		// If you send an “a” message, it responds to the query with a
-		// MessageToRobot that contains ”!” as the commandChar (so, if you see a
-		// ! in the commandChar, don’t send it to the Arduino),
-		// “receiver@9thsense.com” as the driver, and the word “alive” as the
+		// If you send an alive message, it responds to the query with a
+		// MessageToRobot that contains ! as the commandChar (so, if you see a
+		// ! in the commandChar, dont send it to the Arduino),
+		// receiver@9thsense.com as the driver, and the word alive as the
 		// commandArguments.
 
 		if (intent != null  && (!_sleeping)) // intent is null if it is system restart
@@ -908,8 +908,12 @@ public class RobotCommService extends Service {
 		if (messageFromServer.contains("<"))
 		{
 			MessageToRobot serverMessage = new MessageToRobot(messageFromServer);
-			robotCommand = serverMessage.commandChar + serverMessage.commandArguments;
-			timeStamp = serverMessage.timeStamp;	// note that timeStamp might be null here, careful
+			if (serverMessage.commandChar != null)
+			{
+				robotCommand = serverMessage.commandChar;
+				if (serverMessage.commandArguments != null) robotCommand += serverMessage.commandArguments;
+			}
+			if ( serverMessage.timeStamp != null) timeStamp = serverMessage.timeStamp;	// note that timeStamp might be null here, careful
 			if (timeStamp != null) Log.d(TAG, "in processMessageFromXMPPServer, timeStamp: " + timeStamp);
 		}
 		else
