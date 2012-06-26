@@ -32,6 +32,7 @@ public class RobotCommService extends Service {
 	private String host, port, service;
 	private String userid, password, bluetooth, recipient, recipientForEcho;
 	private int portNumber;
+	private Orientation orientation;
 	private arduinoBT BT;
 	private XMPP xmpp;
 	PacketListener _packetListener;
@@ -39,8 +40,9 @@ public class RobotCommService extends Service {
 	public String _C2DMstatus = "Not connected yet";
 	public String _messageReceivedFromRobot = "", _messageSentToRobot = "";
 	public String _messageSentToServer = "", _messageReceivedFromServer = "";
-	public String _robotStatus;
-	public long _lastXMPPreceivedTime, _lastC2DMreceivedTime, _lastArduinoReceivedTime;
+	public String _robotStatus, _startingOrientationString, _currentOrientationString;
+	public int _startingOrientation, _currentOrientation;
+	public long _lastXMPPreceivedTime, _lastC2DMreceivedTime, _lastArduinoReceivedTime, _lastCommandSentToArduinoTime;
 	public long _latencyXMPP = 0, _echoReceivedTimeXMPP, _echoSentTimeServer;
 	public long _latencyC2DM = 0, _echoReceivedTimeC2DM;
 	public long _latencyBT = 0, _echoReceviedTimeBT, _echoSentTimeBT;
@@ -48,8 +50,8 @@ public class RobotCommService extends Service {
 	private long _timeBTconnectionLost, _timeXMPPconnectionLost, _timeC2DMconnectionLost, _lastTimeValue = 0;
 	private long _lastArrivalTime = 0;
 	private boolean _echoReceivedBT = false, _echoReceivedXMPP = false,	_echoReceivedC2DM = false;
-	private double TIME_OUT_ARDUINO = 30000, TIME_OUT_XMPP = 30000,	TIME_OUT_C2DM = 30000;
-	private static final long timerUpdateRate = 9000;
+	private double TIME_OUT_ARDUINO = 30000000, TIME_OUT_XMPP = 30000000, TIME_OUT_C2DM = 30000000, MIN_TIME_BETWEEN_ARDUINO_COMMANDS = 100;
+	private static final long timerUpdateRate = 900000000;
 	private Timer _ckCommTimer;
 	private checkCommTimer _commTimer;
 	private boolean _commFlagBT = false, _commFlagC2DM = false,	_commFlagXMPP = false;
@@ -67,6 +69,8 @@ public class RobotCommService extends Service {
 
 		BT = new arduinoBT(this);
 		xmpp = new XMPP(this);
+		orientation = new Orientation(this);
+		
 		_packetListener = createPacketListener();
 
 
@@ -88,6 +92,7 @@ public class RobotCommService extends Service {
 		Log.d(TAG, "_lastXMPPreceivedTime initialized");
 		_lastC2DMreceivedTime = System.currentTimeMillis();
 		Log.d(TAG, "_lastC2DMreceivedTime initialized");
+		_lastCommandSentToArduinoTime = System.currentTimeMillis();
 		_commTimer = new checkCommTimer();
 		_ckCommTimer = new Timer("ckComm");
 		_ckCommTimer.scheduleAtFixedRate(_commTimer, 0, timerUpdateRate);
@@ -104,12 +109,11 @@ public class RobotCommService extends Service {
 				.getString(R.string.service));
 		userid = prefs.getString("userid", robotResources
 				.getString(R.string.userid));
-		password = prefs.getString("password", robotResources
-				.getString(R.string.password));
-		bluetooth = prefs.getString("bluetooth",
-				robotResources.getString(R.string.bluetooth)).toUpperCase();
+		password = prefs.getString("password", robotResources.getString(R.string.password));
+		bluetooth = prefs.getString("bluetooth",robotResources.getString(R.string.bluetooth)).toUpperCase();
 		recipientForEcho = prefs.getString("recipientForEcho", robotResources.getString(R.string.sendCommandEchoServerAddress));
 		recipient = prefs.getString("recipient", robotResources.getString(R.string.sendMessageToXMPPserverAddress));
+		_startingOrientationString = prefs.getString("startingOrientation", robotResources.getString(R.string.startingOrientation));
 	}
 
 	@Override
@@ -229,11 +233,15 @@ public class RobotCommService extends Service {
 					if (BT == null)	connectBluetooth(bluetooth);
 					else if (!BT.getConnectionState()) connectBluetooth(bluetooth);
 					if (xmpp == null) connectXMPP();
-					else if (!xmpp.getConnectionState()) connectXMPP();
+					else if (!xmpp.getConnectionState()) connectXMPP(); 
 					if (BT != null && xmpp != null)
 					{
 						if (BT.getConnectionState() && xmpp.getConnectionState())
-						messageToServer("<m><re>1.0</re></m>", recipientForEcho);
+						{
+							messageToServer("<m><re>1.0</re></m>", recipientForEcho);
+							moveToStartOrientation();
+						}
+
 					}
 				} else	Log.d(TAG, "Failed entriesTest in onStartCommand");
 			}
@@ -244,6 +252,32 @@ public class RobotCommService extends Service {
 		return Service.START_STICKY; // service will restart after being terminated by the runtime
 	}
 
+	// moves the tablet to the correct position to start a session
+	private void moveToStartOrientation()
+	{
+		int tempOrientation;
+		try  {
+			tempOrientation = Integer.parseInt(orientation._pitchString);
+			
+		}
+		catch (NumberFormatException nfe) {
+			tempOrientation = 0;
+			Log.d(TAG, "in startOrientation, orientation._pitchString is not an integer, it is: " + orientation._pitchString );
+			return;
+		}
+		int degreesToMove =  tempOrientation - _startingOrientation;
+		Log.d(TAG, "in startOrientation, degreesToMove = " + degreesToMove);
+		String command = "u";
+		if (degreesToMove < 0)
+		{
+			command = "n";
+			degreesToMove = -degreesToMove;
+		}
+		command += degreesToMove;
+		
+		sendDataToArduino(command);
+	}
+	
 	public void tryResetBluetooth() {
 		Log.d(TAG, "in tryResetBluetooth");
 		if (BT != null) {
@@ -297,7 +331,7 @@ public class RobotCommService extends Service {
 
 	private void tryResetC2DM() {
 		Log.d(TAG, "in tryResetC2DM");
-		_C2DMstatus = "resetting C2DM";
+		//_C2DMstatus = "resetting C2DM";
 		// if (c2dm == null) c2dm = new C2DM(this);
 		// if (c2dm.getConnectionState()) c2dm.resetConnection();
 		// if (connectC2DM())
@@ -473,9 +507,16 @@ public class RobotCommService extends Service {
 		Log.d(TAG, "in sendDataToArduino");
 		if (BT._isConnected) {
 			Toast.makeText(this, "Sending command to robot: " + robotCommand, Toast.LENGTH_SHORT).show();
+			if (System.currentTimeMillis() - _lastCommandSentToArduinoTime < MIN_TIME_BETWEEN_ARDUINO_COMMANDS)
+			{
+				Log.d(TAG, "Waiting for min time until we can send a command to the arduino");
+				while (System.currentTimeMillis() - _lastCommandSentToArduinoTime  < MIN_TIME_BETWEEN_ARDUINO_COMMANDS);
+				Log.d(TAG, "Finished waiting for min time until we can send a command to the arduino");
+			}
 			if (BT.sendMessage(robotCommand)) {
 				if (_messageSentToRobot.length() > 80) _messageSentToRobot = _messageSentToRobot.substring(5);
 				_messageSentToRobot = robotCommand + " " + _messageSentToRobot;
+				_lastCommandSentToArduinoTime = System.currentTimeMillis();
 				updateWidget();
 				return true;
 			} else
@@ -941,6 +982,7 @@ public class RobotCommService extends Service {
 		}
 		// check timestamp to see if we have already processed this message
 		Log.d(TAG, "in processMessageFromXMPPServer, testing for previous timeStamp: " + timeStamp);
+		/*
 		long timeValue;
 		try  {
 			timeValue = Long.valueOf(timeStamp);
@@ -964,7 +1006,8 @@ public class RobotCommService extends Service {
 		}
 		_lastTimeValue = timeValue;
 		Log.d(TAG, "in processMessageFromXMPPServer, processing new message: " + robotCommand + " timeValue = " + timeValue);
-
+// ************ not checking for command times ************************
+*/
 		// now we know we have the first arrival of a new command from the server
 		// set the global variable
 		_robotCommand = robotCommand;
@@ -1015,7 +1058,7 @@ public class RobotCommService extends Service {
 	void processMessageFromC2DMServer(String messageFromServer)
 	{
 		Log.d(TAG, "in processMessageFromC2DMServer " + messageFromServer);
-
+		//_C2DMstatus = "Connected";
 		String robotCommand = null, timeStamp = null;
 		if (messageFromServer.contains("<"))
 		{
@@ -1040,6 +1083,7 @@ public class RobotCommService extends Service {
 			return;
 		}
 
+		Log.d(TAG, "in processMessageFromC2DMServer, robotCommand = " + robotCommand);
 		if (robotCommand.startsWith("!")) // see if it is just a server echo
 		{
 			_echoReceivedC2DM = true; // just an echo, don't send it along
@@ -1114,7 +1158,8 @@ public class RobotCommService extends Service {
 			_Handler.post(new Runnable() {
 				public void run() {
 					Log.d(TAG, "in processMessageFromC2DMServer, sending command to arduino");
-					sendDataToArduino(_robotCommand);
+					//sendDataToArduino(_robotCommand);
+					// *****************************************not using C2DM ***********************************************
 				}
 			});
 		}
