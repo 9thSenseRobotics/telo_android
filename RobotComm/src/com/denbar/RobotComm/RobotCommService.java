@@ -48,9 +48,10 @@ public class RobotCommService extends Service {
 	public long _latencyBT = 0, _echoReceviedTimeBT, _echoSentTimeBT;
 	private boolean _sleeping = false;
 	private long _timeBTconnectionLost, _timeXMPPconnectionLost, _timeC2DMconnectionLost, _lastTimeValue = 0;
-	private long _lastArrivalTime = 0;
+	private long _lastArrivalTime = 0, _lastPacketSentTime;
 	private boolean _echoReceivedBT = false, _echoReceivedXMPP = false,	_echoReceivedC2DM = false;
-	private double TIME_OUT_ARDUINO = 30000000, TIME_OUT_XMPP = 30000000, TIME_OUT_C2DM = 30000000, MIN_TIME_BETWEEN_ARDUINO_COMMANDS = 100;
+	private double TIME_OUT_ARDUINO = 30000000, TIME_OUT_XMPP = 30000000, TIME_OUT_C2DM = 30000000;
+	private long MIN_TIME_BETWEEN_ARDUINO_COMMANDS = 100, MIN_TIME_BETWEEN_PACKET_OUTPUTS = 100;
 	private static final long timerUpdateRate = 900000000;
 	private Timer _ckCommTimer;
 	private checkCommTimer _commTimer;
@@ -92,7 +93,8 @@ public class RobotCommService extends Service {
 		Log.d(TAG, "_lastXMPPreceivedTime initialized");
 		_lastC2DMreceivedTime = System.currentTimeMillis();
 		Log.d(TAG, "_lastC2DMreceivedTime initialized");
-		_lastCommandSentToArduinoTime = System.currentTimeMillis();
+		//_lastCommandSentToArduinoTime = System.currentTimeMillis();
+		_lastPacketSentTime = System.currentTimeMillis();
 		_commTimer = new checkCommTimer();
 		_ckCommTimer = new Timer("ckComm");
 		_ckCommTimer.scheduleAtFixedRate(_commTimer, 0, timerUpdateRate);
@@ -101,14 +103,11 @@ public class RobotCommService extends Service {
 
 	private void getPreferences() {
 		Resources robotResources = getResources();
-		SharedPreferences prefs = getSharedPreferences("RobotPreferences",
-				MODE_WORLD_WRITEABLE);
+		SharedPreferences prefs = getSharedPreferences("RobotPreferences",	MODE_WORLD_WRITEABLE);
 		host = prefs.getString("host", robotResources.getString(R.string.host));
 		port = prefs.getString("port", robotResources.getString(R.string.port));
-		service = prefs.getString("service", robotResources
-				.getString(R.string.service));
-		userid = prefs.getString("userid", robotResources
-				.getString(R.string.userid));
+		service = prefs.getString("service", robotResources.getString(R.string.service));
+		userid = prefs.getString("userid", robotResources.getString(R.string.userid));
 		password = prefs.getString("password", robotResources.getString(R.string.password));
 		bluetooth = prefs.getString("bluetooth",robotResources.getString(R.string.bluetooth)).toUpperCase();
 		recipientForEcho = prefs.getString("recipientForEcho", robotResources.getString(R.string.sendCommandEchoServerAddress));
@@ -201,8 +200,7 @@ public class RobotCommService extends Service {
 			// received from the bluetooth comm check
 			// both XMPP and RobotCommActivity call sendDataToArduino directly
 			// rather than with an intent
-			if (commCheckBT != null)
-				sendDataToArduino(commCheckBT);
+			if (commCheckBT != null) sendDataToArduino(commCheckBT);
 
 			// received when a connection has gone bad
 			if (reset != null) {
@@ -229,7 +227,7 @@ public class RobotCommService extends Service {
 			if (bootup != null)
 			{
 				if (EntriesTest()) {
-					Log.d(TAG, "Connecting to servers and BT");
+					Log.d(TAG, "Connecting to servers and BT at bootup or restart");
 					if (BT == null)	connectBluetooth(bluetooth);
 					else if (!BT.getConnectionState()) connectBluetooth(bluetooth);
 					if (xmpp == null) connectXMPP();
@@ -459,7 +457,8 @@ public class RobotCommService extends Service {
 		startService(intentC2dm);
 
 	}
-*/
+*/	
+	
 	// this sends a message to controller@9thsense.com
 	// generally just echoing commands that it sent to the arduino
 	// so that controller knows the connection is alive
@@ -507,16 +506,10 @@ public class RobotCommService extends Service {
 		Log.d(TAG, "in sendDataToArduino");
 		if (BT._isConnected) {
 			Toast.makeText(this, "Sending command to robot: " + robotCommand, Toast.LENGTH_SHORT).show();
-			if (System.currentTimeMillis() - _lastCommandSentToArduinoTime < MIN_TIME_BETWEEN_ARDUINO_COMMANDS)
-			{
-				Log.d(TAG, "Waiting for min time until we can send a command to the arduino");
-				while (System.currentTimeMillis() - _lastCommandSentToArduinoTime  < MIN_TIME_BETWEEN_ARDUINO_COMMANDS);
-				Log.d(TAG, "Finished waiting for min time until we can send a command to the arduino");
-			}
 			if (BT.sendMessage(robotCommand)) {
 				if (_messageSentToRobot.length() > 80) _messageSentToRobot = _messageSentToRobot.substring(5);
 				_messageSentToRobot = robotCommand + " " + _messageSentToRobot;
-				_lastCommandSentToArduinoTime = System.currentTimeMillis();
+				Log.d(TAG, "Message successfully sent to robot: " + robotCommand + " at time = " + System.currentTimeMillis());
 				updateWidget();
 				return true;
 			} else
@@ -677,10 +670,17 @@ public class RobotCommService extends Service {
 				String testXML = message.toXML();
 				Log.d(TAG, "in processPacket, testXML: " + testXML);
 				if (message.getBody() != null) {
+					if (System.currentTimeMillis() - _lastPacketSentTime < MIN_TIME_BETWEEN_PACKET_OUTPUTS)
+					{
+						Log.d(TAG, "Waiting for min time until we can change the value of the global variable _XMPPcommand");
+						while (System.currentTimeMillis() - _lastPacketSentTime  < MIN_TIME_BETWEEN_PACKET_OUTPUTS);
+						Log.d(TAG, "Finished waiting for min time until we can change XMPP_command");
+					}
+					_lastPacketSentTime = System.currentTimeMillis();
 					_XMPPcommand = message.getBody();
 					_Handler.post(new Runnable() {
 						public void run() {
-							Log.d(TAG, "in processPacket, _XMPPcommand: " + _XMPPcommand);
+							Log.d(TAG, "in processPacket, _XMPPcommand: " + _XMPPcommand + " successfully sent at time = " + System.currentTimeMillis() );
 							processMessageFromXMPPServer(_XMPPcommand);
 						}
 					});
@@ -946,9 +946,10 @@ public class RobotCommService extends Service {
 	{
 		Log.d(TAG, "in processMessageFromXMPPServer " + messageFromServer);
 		String robotCommand = null, timeStamp = null;
+		MessageToRobot serverMessage;
 		if (messageFromServer.contains("<"))
 		{
-			MessageToRobot serverMessage = new MessageToRobot(messageFromServer);
+			serverMessage = new MessageToRobot(messageFromServer);
 			if (serverMessage.commandChar != null)
 			{
 				robotCommand = serverMessage.commandChar;
@@ -982,7 +983,7 @@ public class RobotCommService extends Service {
 		}
 		// check timestamp to see if we have already processed this message
 		Log.d(TAG, "in processMessageFromXMPPServer, testing for previous timeStamp: " + timeStamp);
-		/*
+		
 		long timeValue;
 		try  {
 			timeValue = Long.valueOf(timeStamp);
@@ -1006,15 +1007,26 @@ public class RobotCommService extends Service {
 		}
 		_lastTimeValue = timeValue;
 		Log.d(TAG, "in processMessageFromXMPPServer, processing new message: " + robotCommand + " timeValue = " + timeValue);
-// ************ not checking for command times ************************
-*/
+
 		// now we know we have the first arrival of a new command from the server
 		// set the global variable
+		
+		MessageFromRobot mfr = new MessageFromRobot(serverMessage.driverAddr, serverMessage.robotAddr, serverMessage.commandChar, "echo", serverMessage.timeStamp);
+		
+		if (xmpp != null) xmpp.SendRobotMessageToServer(mfr);
+		
 		_robotCommand = robotCommand;
 		if (_messageReceivedFromServer.length() > 80) _messageReceivedFromServer = _messageReceivedFromServer.substring(5);
 		_messageReceivedFromServer = robotCommand + " " + _messageReceivedFromServer;
 		//_messageReceivedFromServer = _robotCommand;
 		_lastArrivalTime = System.currentTimeMillis();
+		
+		if (_robotCommand.startsWith("s"))
+		{
+			_lastTimeValue = 0;
+			Log.d(TAG, "in processMessageFromXMPPServer, resetting timeValue");
+			return;
+		}
 
 		if (_robotCommand.startsWith("P"))	// server is asking for status check, sleeping or not
 		{
@@ -1047,7 +1059,7 @@ public class RobotCommService extends Service {
 		{
 			_Handler.post(new Runnable() {
 				public void run() {
-					Log.d(TAG, "in processMessageFromXMPPServer, sending command to arduino");
+					Log.d(TAG, "in processMessageFromXMPPServer, successfully sending command to arduino, time = " + System.currentTimeMillis());
 					sendDataToArduino(_robotCommand);
 				}
 			});
@@ -1126,6 +1138,13 @@ public class RobotCommService extends Service {
 		_messageReceivedFromServer = _robotCommand;
 		_lastArrivalTime = System.currentTimeMillis();
 
+		if (_robotCommand.startsWith("s"))
+		{
+			_lastTimeValue = 0;
+			Log.d(TAG, "in processMessageFromC2DMServer, resetting _lastTimeValue");
+			return;
+		}
+		
 		if (_robotCommand.startsWith("P"))	// server is asking for status check, sleeping or not
 		{
 			Log.d(TAG, "in processMessageFromC2DMServer,server is asking for status check");

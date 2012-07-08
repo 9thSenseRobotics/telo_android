@@ -439,6 +439,87 @@ class MessageToRobot extends RobotMessages
 		} catch (Exception e2) {
 			e2.printStackTrace();
 		}
-	} // end five-argument constructor
+	} // end six-argument constructor
+	
+	public MessageToRobot(String da, String dn, String ra, String cc,
+			String ca, String co, String sequenceNumber)
+	// 7-argument constructor: build this class from its component data
+	{
+		// set the class' properties from the passed-in values; if they're
+		// unspecified, set as empty
+		timeStamp = sequenceNumber;
+		driverAddr = da;
+		driverName = dn;
+		robotAddr = ra;
+		commandChar = cc;
+		commandArguments = ca;
+		comment = co;
+
+		// parse XML string to create Document
+		try {
+			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			dbf.setValidating(false);
+			dbf.setFeature("http://xml.org/sax/features/namespaces", false);
+			dbf.setFeature("http://xml.org/sax/features/validation", false);
+			DocumentBuilder db = dbf.newDocumentBuilder();
+			XML = db.newDocument();
+
+			Element m = XML.createElement("m");
+			XML.appendChild(m);
+			Element rootElement = XML.getDocumentElement();
+
+			// <t>timeStamp</t>
+			Element t = XML.createElement("t");
+			t.appendChild(XML.createTextNode(timeStamp));
+			rootElement.appendChild(t);
+
+			// $this->XML->addChild('d', $this->driverAddr);
+			Element d = XML.createElement("d");
+			d.appendChild(XML.createTextNode(driverAddr));
+			rootElement.appendChild(d);
+
+			// $this->XML->addChild('d', $this->driverName);
+			Element ddn = XML.createElement("dn");
+			ddn.appendChild(XML.createTextNode(driverName));
+			rootElement.appendChild(ddn);
+
+			// $this->XML->addChild('r', $this->robotAddr);
+			Element r = XML.createElement("r");
+			r.appendChild(XML.createTextNode(robotAddr));
+			rootElement.appendChild(r);
+
+			// $this->XML->addChild('c', $this->commandChar);
+			Element c = XML.createElement("c");
+			c.appendChild(XML.createTextNode(commandChar));
+			rootElement.appendChild(c);
+
+			// $this->XML->addChild('a', $this->commandArguments);
+			Element a = XML.createElement("a");
+			a.appendChild(XML.createTextNode(commandArguments));
+			rootElement.appendChild(a);
+
+			// $this->XML->addChild('co', $this->comment);
+			Element cm = XML.createElement("co");
+			cm.appendChild(XML.createTextNode(comment));
+			rootElement.appendChild(cm);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		try {
+			DOMSource source = new DOMSource(XML);
+			TransformerFactory transformerFactory = TransformerFactory
+					.newInstance();
+			Transformer transformer = transformerFactory.newTransformer();
+			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION,
+					"yes");
+			StringWriter writer = new StringWriter();
+			StreamResult result = new StreamResult(writer);
+			transformer.transform(source, result);
+			XMLStr = writer.getBuffer().toString();
+
+		} catch (Exception e2) {
+			e2.printStackTrace();
+		}
+	} // end seven-argument constructor
 
 }

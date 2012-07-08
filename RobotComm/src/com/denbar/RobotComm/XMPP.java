@@ -144,6 +144,19 @@ public class XMPP {
 		}
 		return true;
 	}
+	
+	public boolean SendRobotMessageToServer(MessageFromRobot message)
+	{
+		Message msg = new Message(_recipient, Message.Type.chat);
+		msg.setBody(message.XMLStr);
+		try {
+			_connection.sendPacket(msg);
+		} catch (Exception e) {
+			Log.d(TAG, "exception from sendData: " + e.getMessage());
+			return false;
+		}
+		return true;		
+	}
 
 	public boolean getConnectionState() {
 		if (_connection == null)

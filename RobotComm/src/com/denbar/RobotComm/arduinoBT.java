@@ -23,6 +23,9 @@ public class arduinoBT {
 	private InputStream _inputStream;
 	Thread workerThread;
 	byte[] readBuffer;
+	String _lastMessage = "x";
+	long _lastCommandSentToArduinoTime;
+	long MIN_TIME_BETWEEN_ARDUINO_COMMANDS = 100;
 	int readBufferPosition;
 	int counter;
 	volatile boolean stopWorker;
@@ -39,6 +42,7 @@ public class arduinoBT {
 		_context = CallingContext;
 		_BTaddress = "invalid address"; // just so it is not an empty string
 		_isConnected = false;
+		_lastCommandSentToArduinoTime = System.currentTimeMillis();
 	}
 
 	public void setBTaddress(String BTaddress) {
@@ -270,12 +274,20 @@ public class arduinoBT {
 			Log.d(TAG, "tried to send message with null outputStream ");
 			return false;
 		}
+		 if (System.currentTimeMillis() - _lastCommandSentToArduinoTime < MIN_TIME_BETWEEN_ARDUINO_COMMANDS)
+		{
+			Log.d(TAG, "Waiting for min time until we can send a command to the arduino");
+			while (System.currentTimeMillis() - _lastCommandSentToArduinoTime  < MIN_TIME_BETWEEN_ARDUINO_COMMANDS);
+			Log.d(TAG, "Finished waiting for min time until we can send a command to the arduino");
+		}
+		_lastCommandSentToArduinoTime = System.currentTimeMillis();
+		_lastMessage = msg;
 		String msgTest = msg + "#";
-		Log.d(TAG, "message to arduino: " + msgTest);
 		try {
 			byte[] byteString = (msgTest + " ").getBytes();
 			byteString[byteString.length - 1] = 0;
 			_outputStream.write(byteString);
+			Log.d(TAG, "sendMessage to arduino successfully: " + msgTest + " at time " + System.currentTimeMillis());
 		} catch (IOException e) {
 			Log.d(TAG, "exception from sendMessage: " + e.getMessage());
 			return false;
@@ -290,6 +302,7 @@ public class arduinoBT {
 		stopWorker = false;
 		readBufferPosition = 0;
 		readBuffer = new byte[1024];
+		for (int i = 0; i < 1024; i++) readBuffer[i] = 0;
 		workerThread = new Thread(new Runnable() {
 			public void run() {
 				while (!Thread.currentThread().isInterrupted() && !stopWorker) {
@@ -300,6 +313,12 @@ public class arduinoBT {
 							_inputStream.read(packetBytes);
 							for (int i = 0; i < bytesAvailable; i++) {
 								byte b = packetBytes[i];
+								if (b == 0 || b == delimiter)
+								{
+									if ( b== 0) Log.d(TAG, "character " + i + " in message from arduino was null!");
+									else if (b == delimiter) Log.d(TAG, "character " + i + " was delimiter, bytesAvailable = " + bytesAvailable);
+									Log.d(TAG, "buffer = " + readBuffer + " packetBytes = " + packetBytes);								
+								}
 								if (b == delimiter) {
 									byte[] encodedBytes = new byte[readBufferPosition];
 									System.arraycopy(readBuffer, 0,

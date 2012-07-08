@@ -9,14 +9,14 @@
     <string name="userid">not set</string>
     <string name="password">9thsense</string>
     <string name="bluetooth">00:06:66:46:5A:91</string>
-    <string name="recipient">controller@9thsense.com</string>
+    <string name="recipient">boshtest@9thsense.com</string>
     <string name="sendCommandEchoServerAddress">controller@9thsense.com</string>
     <string name="sendMessageToXMPPserverAddress">receiver@9thsense.com</string>
     <string name="setPreferences">Preferences</string>
     <string name="preferencesStatus">not saved yet</string>
     <string name="quit">Quit</string>
     <string name="help">Help</string>
-    <string name="version">  RobotComm v0.60</string>
+    <string name="version">  RobotComm v0.61</string>
     <string name="startingOrientation">180</string>
 
     <color name="background_color">#000000</color>

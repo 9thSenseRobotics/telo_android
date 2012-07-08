@@ -311,4 +311,72 @@ class MessageFromRobot extends RobotMessages
 			e2.printStackTrace();
 		}
 	}
+	public MessageFromRobot(String da, String ra, String rv, String cm, String sequenceNumber)
+	// 4-argument constructor: build this class from its component data with a
+	// response and a comment
+	{
+		// set the class' properties from the passed-in values; if they're
+		// unspecified, set as empty
+		timeStamp = sequenceNumber;
+		driverAddr = da;
+		robotAddr = ra;
+		responseValue = rv;
+		comment = cm;
+
+		// parse XML string to create Document
+		try {
+			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			dbf.setValidating(false);
+			dbf.setFeature("http://xml.org/sax/features/namespaces", false);
+			dbf.setFeature("http://xml.org/sax/features/validation", false);
+			DocumentBuilder db = dbf.newDocumentBuilder();
+			XML = db.newDocument();
+
+			Element m = XML.createElement("m");
+			XML.appendChild(m);
+			Element rootElement = XML.getDocumentElement();
+
+			// <t>timeStamp</t>
+			Element t = XML.createElement("t");
+			t.appendChild(XML.createTextNode(timeStamp));
+			rootElement.appendChild(t);
+
+			// $this->XML->addChild('d', $this->driverAddr);
+			Element d = XML.createElement("d");
+			d.appendChild(XML.createTextNode(driverAddr));
+			rootElement.appendChild(d);
+
+			// $this->XML->addChild('r', $this->robotAddr);
+			Element r = XML.createElement("r");
+			r.appendChild(XML.createTextNode(robotAddr));
+			rootElement.appendChild(r);
+
+			// $this->XML->addChild('re', $this->responseValue);
+			Element re = XML.createElement("re");
+			re.appendChild(XML.createTextNode(responseValue));
+			rootElement.appendChild(re);
+
+			// $this->XML->addChild('co', $this->comment);
+			Element co = XML.createElement("co");
+			co.appendChild(XML.createTextNode(comment));
+			rootElement.appendChild(co);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		try {
+			DOMSource source = new DOMSource(XML);
+			TransformerFactory transformerFactory = TransformerFactory
+					.newInstance();
+			Transformer transformer = transformerFactory.newTransformer();
+			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION,
+					"yes");
+			StringWriter writer = new StringWriter();
+			StreamResult result = new StreamResult(writer);
+			transformer.transform(source, result);
+			XMLStr = writer.getBuffer().toString();
+
+		} catch (Exception e2) {
+			e2.printStackTrace();
+		}
+	}
 }
