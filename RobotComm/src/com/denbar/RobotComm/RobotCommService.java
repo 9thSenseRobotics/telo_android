@@ -484,8 +484,7 @@ public class RobotCommService extends Service {
 	// if the response value = "m" or anything else, it will just note the message
 	public boolean messageToServer(String data, String responseValue) {
 		if (xmpp == null) {
-			Log.d(TAG, "tried to send data: " + data
-					+ " to XMPP server when xmpp not created");
+			Log.d(TAG, "tried to send data: " + data + " to XMPP server when xmpp not created");
 			return false;
 		}
 		Log.d(TAG, "in messageToServer: " + data + ", " + responseValue);
