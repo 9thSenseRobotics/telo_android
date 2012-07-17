@@ -58,6 +58,7 @@ public class arduinoBT {
 	}
 
 	public void closeBT() throws IOException {
+		Log.d(TAG, "closeBT: closing BT connection");
 		stopWorker = true;
 		if (_outputStream != null)
 			_outputStream.close();
@@ -111,6 +112,7 @@ public class arduinoBT {
 		}
 		_isConnected = true;
 		ListenForData();
+		Log.d(TAG, "OpenBT: BT connected");
 		return true;
 	}
 

@@ -12,6 +12,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
@@ -50,7 +51,6 @@ public class RobotCommActivity extends Activity {
 		Toast.makeText(this, "RobotComm activity created", Toast.LENGTH_SHORT).show();
 
 		_context = this;
-
 
 		checkStateTimer = new Timer("checkState"); // setup timer
 		MyGUItimer = new GUItimer();
@@ -108,14 +108,29 @@ public class RobotCommActivity extends Activity {
 							com.denbar.RobotComm.RobotCommService.class);
 						bindService(bindIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 						Log.d(TAG, "Binding to service.");
-						editStatus.setText("Bindng to service, try waking it again in a moment");
+						editStatus.setText("Bindng to service");
+						// pause 2 seconds
+				        final Handler handler = new Handler(); 
+				        Timer t = new Timer(); 
+				        t.schedule(new TimerTask() { 
+				                public void run() { 
+				                        handler.post(new Runnable() { 
+				                                public void run() { 
+				                                	finish();
+				                                } 
+				                        }); 
+				                } 
+				        }, 2000); 
 					}
-					if (serviceBinder != null)
+					if (serviceBinder != null)  // not an "else" because we want to check this again here
 					{
 						serviceBinder.wakeUp();
+						Log.d(TAG, "waking up, connecting");
 						//Connect();
 						_sleeping = false;
 						editStatus.setText("Waking up");
+						editBluetoothStatus.setText("Waking up");
+						updateGUI();
 						_btnSleep.setText("Sleep");
 						MyGUItimer.cancel();
 						MyGUItimer = new GUItimer();
@@ -125,37 +140,12 @@ public class RobotCommActivity extends Activity {
 				else
 				{
 					_sleeping = true;
+					editStatus.setText("Sleeping");
+					editBluetoothStatus.setText("Sleeping");
 					MyGUItimer.cancel();
-					editStatus.setText("Sleeping");
-					//editBluetoothStatus.setText("Sleeping");
-					//editXMPPstatus.setText("Sleeping");
-					//editC2DMstatus.setText("Sleeping");
-					/*  doesn't work, don't know why
-					 Intent serviceIntent = new Intent();
-					serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
-					_context.stopService(serviceIntent);
-					if (serviceBinder != null) {
-						unbindService(serviceConnection);
-						Log.d(TAG, "Sleep button clicked, unbinding and shutting down service");
-						serviceBinder= null;
-					}
-					*/
-					if (serviceBinder != null) serviceBinder.sleep();
+					if (serviceBinder != null) serviceBinder.goToSleep();
 					_btnSleep.setText("Wake Up");
-
-
 				}
-				/*
-				if (serviceBinder != null)
-				{
-					editStatus.setText("Sleeping");
-					serviceBinder._sleep = true;
-				}
-				else
-				{
-					editStatus.setText("not bound, cannot sleep yet");
-				}
-				*/
 			}
 		});
 
@@ -321,10 +311,10 @@ public class RobotCommActivity extends Activity {
 			message += "service, ";
 			returnResult = false;
 		}
-		if (userid.contains("@")) {
-			message += "userid,";
-			returnResult = false;
-		}
+		//if ( (!userid.contains("@"))) {
+		//	message += "userid,";
+		//	returnResult = false;
+		//}
 		if (!BluetoothAdapter.checkBluetoothAddress(bluetooth)) {
 			message += "bluetooth ";
 			returnResult = false;
