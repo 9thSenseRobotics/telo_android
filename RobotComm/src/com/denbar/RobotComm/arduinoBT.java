@@ -1,5 +1,22 @@
 package com.denbar.RobotComm;
 
+//	  Copyright (c) 2012, 9th Sense, Inc.
+//	  All rights reserved.
+//
+//
+//     This program is free software: you can redistribute it and/or modify
+//     it under the terms of the GNU General Public License as published by
+//     the Free Software Foundation, either version 3 of the License, or
+//     (at your option) any later version.
+// 
+//     This program is distributed in the hope that it will be useful,
+//     but WITHOUT ANY WARRANTY; without even the implied warranty of
+//     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//     GNU General Public License for more details.
+// 
+//     You should have received a copy of the GNU General Public License
+//     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,7 +45,7 @@ public class arduinoBT {
 	long MIN_TIME_BETWEEN_ARDUINO_COMMANDS = 100;
 	int readBufferPosition;
 	int counter;
-	volatile boolean stopWorker;
+	volatile boolean stopWorker, _checkReceived = false;
 	boolean _isConnected;
 	String _BTaddress;
 	Context _context;
@@ -88,7 +105,8 @@ public class arduinoBT {
 			// we got a call to Connect() even though we think we are already
 			// connected
 			Log.d(TAG, "Connect requested when already connected");
-			return true;
+			if (checkConnection()) return true;
+			else _isConnected = false;
 		}
 		try {
 			if (!findBT()) {
@@ -270,6 +288,50 @@ public class arduinoBT {
 		return true;
 	}
 
+	
+	private boolean checkConnection()
+	{
+		_checkReceived = false;
+		if (!sendMessage("check")) return false;
+		// now we need to wait for a response
+		Log.d(TAG, "waiting for bluetooth response ");
+	    // SLEEP 2 seconds HERE ...
+		long counter = 0;
+		boolean noDataYet = true;
+		int bytesAvailable = 0;
+		while (counter < 100000 && noDataYet)
+		{
+			try {
+				bytesAvailable = _inputStream.available();
+			}
+			catch (IOException ex) {
+			}
+			if (bytesAvailable > 0) 
+			{
+				Log.d(TAG, "bluetooth connection checked good ");
+				return true;
+			}
+			counter++;
+		}
+		Log.d(TAG, "bluetooth connection checked bad");
+		return false;
+	    /*
+	    Handler handler = new Handler(); 
+	    handler.postDelayed(new Runnable() { 
+	         public void run() { 
+	     	    if (_checkReceived) Log.d(TAG, "bluetooth connection checked good ");
+	    	    else Log.d(TAG, "bluetooth connection checked bad ");
+	         } 
+	    }, 2000); 
+	    if (_checkReceived) Log.d(TAG, "2nd out bluetooth connection checked good ");
+	    else Log.d(TAG, "2nd out bluetooth connection checked bad ");
+	    return _checkReceived;	
+	    */
+	}
+	
+	
+	
+	
 	// send a message to the arduino
 	public boolean sendMessage(String msg) {
 		if (_outputStream == null) {
@@ -332,10 +394,17 @@ public class arduinoBT {
 									handler.post(new Runnable() {
 										public void run() {
 											Log.d(TAG, "message from arduino: "	+ data);
-											Intent serviceIntent = new Intent();
-											serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
-											serviceIntent.putExtra("messageFromRobot", data);
-											_context.startService(serviceIntent);
+											if (data.contains("check"))
+											{
+												_checkReceived = true;	// bluetooth connection check
+											}
+											else
+											{
+												Intent serviceIntent = new Intent();
+												serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
+												serviceIntent.putExtra("messageFromRobot", data);
+												_context.startService(serviceIntent);
+											}
 										}
 									});
 								} else {

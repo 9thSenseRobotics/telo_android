@@ -1,5 +1,23 @@
 package com.denbar.RobotComm;
 
+//Copyright (c) 2012, 9th Sense, Inc.
+//All rights reserved.
+//
+//
+//This program is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License
+//along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -48,7 +66,7 @@ public class RobotCommActivity extends Activity {
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 		Log.d(TAG, "in onCreate");
-		Toast.makeText(this, "RobotComm activity created", Toast.LENGTH_SHORT).show();
+		//Toast.makeText(this, "RobotComm activity created", Toast.LENGTH_SHORT).show();
 
 		_context = this;
 
@@ -57,7 +75,7 @@ public class RobotCommActivity extends Activity {
 
 		setContentView(R.layout.main);
 
-		editRobotName = (EditText) findViewById(R.id.robotname);
+		editRobotName = (EditText) findViewById(R.id.user_name);
 		editXMPPstatus = (EditText) findViewById(R.id.XMPPstatus);
 		editC2DMstatus = (EditText) findViewById(R.id.C2DMstatus);
 		editBluetoothStatus = (EditText) findViewById(R.id.bluetoothStatus);
@@ -126,7 +144,7 @@ public class RobotCommActivity extends Activity {
 					{
 						serviceBinder.wakeUp();
 						Log.d(TAG, "waking up, connecting");
-						//Connect();
+						Connect();
 						_sleeping = false;
 						editStatus.setText("Waking up");
 						editBluetoothStatus.setText("Waking up");
@@ -196,7 +214,7 @@ public class RobotCommActivity extends Activity {
 	protected void onStart() {
 		super.onStart();
 		Log.d(TAG, "in onStart");
-		Toast.makeText(this, "RobotComm activty started", Toast.LENGTH_SHORT).show();
+		//Toast.makeText(this, "RobotComm activty started", Toast.LENGTH_SHORT).show();
 		getPreferences();
 	}
 
@@ -212,8 +230,9 @@ public class RobotCommActivity extends Activity {
 		SharedPreferences prefs = getSharedPreferences("RobotPreferences",
 				MODE_WORLD_WRITEABLE);
 
-		robotName = prefs.getString("robotname", robotResources
-				.getString(R.string.robot_name));
+		robotName = prefs.getString("userid", robotResources.getString(R.string.userid));
+			// for now, just put username here
+			//prefs.getString("robotname", robotResources.getString(R.string.user_name));
 
 		host = prefs.getString("host", robotResources.getString(R.string.host));
 		port = prefs.getString("port", robotResources.getString(R.string.port));

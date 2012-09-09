@@ -20,10 +20,10 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:minWidth="50dp"
-            android:text="   Name:" />
+            android:text="   User:" />
 
         <EditText
-            android:id="@+id/robotname"
+            android:id="@+id/user_name"
             android:layout_width="100dp"
             android:layout_height="match_parent"
             android:autoText="false"

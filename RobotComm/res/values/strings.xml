@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">RobotComm</string>
-    <string name="robot_name">robot.name</string>
+    <string name="user_name">User name</string>
     <string name="host">9thsense.com</string>
     <string name="port">5222</string>
     <string name="service">9thsense.com</string>
@@ -16,7 +16,7 @@
     <string name="preferencesStatus">not saved yet</string>
     <string name="quit">Quit</string>
     <string name="help">Help</string>
-    <string name="version">  RobotComm v0.62</string>
+    <string name="version">  RobotComm v1.04</string>
     <string name="startingOrientation">180</string>
 
     <color name="background_color">#000000</color>
