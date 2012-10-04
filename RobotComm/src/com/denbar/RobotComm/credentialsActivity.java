@@ -40,7 +40,7 @@ public class credentialsActivity extends Activity {
 	private static final String LOG = "credentialsActivity";
 	private EditText editRobotName, editUserID, editPassword, editBluetooth;
 	private EditText editStatus;
-	private String robotName, userid, password, bluetooth;
+	private String userid, password, bluetooth;
 	private Context myContext;
 	
 
@@ -48,8 +48,7 @@ public class credentialsActivity extends Activity {
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 		setContentView(R.layout.credentials);
-
-		editRobotName = (EditText) findViewById(R.id.robotname);
+		
 		editUserID = (EditText) findViewById(R.id.userid);
 		editPassword = (EditText) findViewById(R.id.password);
 		editBluetooth = (EditText) findViewById(R.id.bluetooth);
@@ -58,8 +57,7 @@ public class credentialsActivity extends Activity {
 		Resources robotResources = getResources();
 		SharedPreferences prefs = getSharedPreferences("RobotPreferences",
 				MODE_WORLD_WRITEABLE);
-		robotName = prefs.getString("robotname", robotResources
-				.getString(R.string.user_name));
+
 		userid = prefs.getString("userid", robotResources
 				.getString(R.string.userid));
 		password = prefs.getString("password", robotResources
@@ -69,7 +67,6 @@ public class credentialsActivity extends Activity {
 
 		myContext = this;
 
-		editRobotName.setText(robotName);
 		editUserID.setText(userid);
 		editPassword.setText(password);
 		editBluetooth.setText(bluetooth);
@@ -79,7 +76,6 @@ public class credentialsActivity extends Activity {
 		Button btnSave = (Button) this.findViewById(R.id.btnSave);
 		btnSave.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View view) {
-				robotName = editRobotName.getText().toString();
 				userid = editUserID.getText().toString();
 				password = editPassword.getText().toString();
 				bluetooth = editBluetooth.getText().toString();
@@ -88,7 +84,6 @@ public class credentialsActivity extends Activity {
 					SharedPreferences newprefs = getSharedPreferences(
 							"RobotPreferences", MODE_WORLD_WRITEABLE);
 					SharedPreferences.Editor editor = newprefs.edit();
-					editor.putString("robotname", robotName);
 					if (userid.contains("@") && userid.length() > 12) userid = userid.substring(0, userid.length() - 13);
 					editor.putString("userid", userid);
 					editor.putString("password", password);

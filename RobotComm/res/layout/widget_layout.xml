@@ -42,7 +42,7 @@
                 android:layout_margin="4dip"
                 android:text="XMPP status" >
             </TextView>
-
+<!-- 
             <TextView
                 android:id="@+id/C2DM"
                 style="@android:style/TextAppearance.Medium"
@@ -51,7 +51,7 @@
                 android:layout_margin="4dip"
                 android:text="C2DM status" >
             </TextView>
-
+-->
             <TextView
                 android:id="@+id/bluetooth"
                 style="@android:style/TextAppearance.Medium"
@@ -60,7 +60,7 @@
                 android:layout_margin="4dip"
                 android:text="bluetooth status" >
             </TextView>
-
+<!-- 
             <TextView
                 android:id="@+id/sentToServer"
                 style="@android:style/TextAppearance.Medium"
@@ -78,7 +78,7 @@
                 android:layout_margin="4dip"
                 android:text="sent to robot:" >
             </TextView>
-
+-->
         </LinearLayout>
     </LinearLayout>
 

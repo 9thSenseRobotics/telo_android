@@ -39,7 +39,6 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
 //Service that supports the 9th Sense robots
 public class RobotCommService extends Service {
@@ -163,6 +162,10 @@ public class RobotCommService extends Service {
 
 		if (intent != null  && (!_sleeping)) // intent is null if it is system restart
 		{
+			// from MonitorActivity
+			String messageToConnect = intent.getStringExtra("Connect");
+			String messageToChangeSleepState = intent.getStringExtra("SleepState");
+			
 			// from C2DM server
 			String messageFromC2DM = intent.getStringExtra("C2DMmessage");
 
@@ -174,7 +177,7 @@ public class RobotCommService extends Service {
 			// arduino
 			String commCheckBT = intent.getStringExtra("commCheckBT");
 
-			// from this service, trying to recover a lost connection
+			// from this service or from MonitorActivity, trying to recover a lost connection
 			String reset = intent.getStringExtra("reset");
 
 			// from either RobotCommActivity (user chat) or from this service,
@@ -184,6 +187,13 @@ public class RobotCommService extends Service {
 			// from StartupIntentReceiver, boot up is done and it is time to connect
 			String bootup = intent.getStringExtra("Bootup");
 
+			
+			if (messageToConnect != null)
+			{
+				connectXMPP();
+				connectBluetooth(messageToConnect);  // messageToConnect has the bluetooth address
+				Log.d(TAG, "MonitorActivity sent Connect command");
+			}
 
 			if (messageFromC2DM != null)
 			{
@@ -218,7 +228,7 @@ public class RobotCommService extends Service {
 			// received from the bluetooth comm check
 			// both XMPP and RobotCommActivity call sendDataToArduino directly
 			// rather than with an intent
-			if (commCheckBT != null) sendDataToArduino(commCheckBT);
+			if (commCheckBT != null) sendDataToArduino(commCheckBT);			
 
 			// received when a connection has gone bad
 			if (reset != null) {
@@ -228,6 +238,11 @@ public class RobotCommService extends Service {
 					tryResetXMPP();
 				else if (reset.equals("C2DM"))
 					tryResetC2DM();
+				else if (reset.equals("userCommanded"))
+				{
+					tryResetBluetooth();
+					tryResetXMPP();
+				}
 			}
 
 			// we got a request to send a message to the server that did not
@@ -305,6 +320,8 @@ public class RobotCommService extends Service {
 				_commFlagBT = false;
 				_echoReceivedBT = false;
 				_bluetoothStatus = "Hardware problem, check power";
+				RobotCommApplication.getInstance().setBluetoothConnected(false);
+				RobotCommApplication.getInstance().setBluetoothStatus(_bluetoothStatus);
 				_robotStatus = "Not operating";
 				_timeBTconnectionLost = System.currentTimeMillis(); // we will set up an alarm to periodically retry
 			}
@@ -314,6 +331,7 @@ public class RobotCommService extends Service {
 	private void tryResetXMPP() {
 		Log.d(TAG, "in tryResetXMPP");
 		_XMPPstatus = "resetting XMPP";
+		RobotCommApplication.getInstance().setXMPPstatus(_XMPPstatus);
 		if (xmpp == null)
 			xmpp = new XMPP(this);
 		if (xmpp.getConnectionState())
@@ -329,6 +347,7 @@ public class RobotCommService extends Service {
 		} else {
 			_XMPPproblem = true;
 			_XMPPstatus = "XMPP lost connection";
+			RobotCommApplication.getInstance().setXMPPstatus(_XMPPstatus);
 			_robotStatus = "Not operating";
 			_timeXMPPconnectionLost = System.currentTimeMillis(); // we will set
 																	// up an
@@ -375,6 +394,7 @@ public class RobotCommService extends Service {
 		if (BT.getConnectionState() && (!_commFlagBT)) {
 			Log.d(TAG, "bluetooth connection requested, already connected");
 			_bluetoothStatus = "checking bluetooth connection";
+			RobotCommApplication.getInstance().setBluetoothStatus(_bluetoothStatus);
 			updateWidget();
 			//return;
 		}
@@ -390,6 +410,8 @@ public class RobotCommService extends Service {
 		if (BT.Connect()) { // this blocks until BT connects or times out
 			// might want to run in Async
 			_bluetoothStatus = "Connected";
+			RobotCommApplication.getInstance().setBluetoothConnected(true);
+			RobotCommApplication.getInstance().setBluetoothStatus(_bluetoothStatus);
 			_bluetoothProblem = false;
 			updateWidget();
 			Log.d(TAG, "Bluetooth connected");
@@ -398,6 +420,8 @@ public class RobotCommService extends Service {
 			//Toast.makeText(this, "Bluetooth connection failed, opening RobotCommActivity", Toast.LENGTH_LONG).show();
 			Log.d(TAG, "bluetooth connection failed");
 			_bluetoothStatus = "Connection failed";
+			RobotCommApplication.getInstance().setBluetoothConnected(false);
+			RobotCommApplication.getInstance().setBluetoothStatus(_bluetoothStatus);
 			updateWidget();
 			Intent RobotCommIntent = new Intent(this, RobotCommActivity.class);
 			RobotCommIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -414,6 +438,7 @@ public class RobotCommService extends Service {
 		_triedC2DMconnect = true;
 		if (xmpp.getConnectionState()) {
 			_XMPPstatus = "still connected";
+			RobotCommApplication.getInstance().setXMPPstatus(_XMPPstatus);
 			updateWidget();
 			Log.d(TAG, "XMPP connection requested, already connected");
 			return true;
@@ -433,6 +458,8 @@ public class RobotCommService extends Service {
 			//Toast.makeText(this, "XMPP connected", Toast.LENGTH_SHORT).show();
 			Log.d(TAG, "XMPP connected");
 			_XMPPstatus = "Connected";
+			RobotCommApplication.getInstance().setXMPPstatus(_XMPPstatus);
+			RobotCommApplication.getInstance().setXMPPconnected(true);
 			_XMPPproblem = false;
 			updateWidget();
 			//setupPacketListener();
@@ -443,6 +470,8 @@ public class RobotCommService extends Service {
 			//Toast.makeText(this, "XMPP connection failed, opening RobotCommActivity", Toast.LENGTH_LONG).show();
 			Log.d(TAG, "XMPP connection failed");
 			_XMPPstatus = "Not connected";
+			RobotCommApplication.getInstance().setXMPPstatus(_XMPPstatus);
+			RobotCommApplication.getInstance().setXMPPconnected(false);
 			updateWidget();
 			_connection = null;
 			Intent RobotCommIntent = new Intent(this, RobotCommActivity.class);
@@ -585,6 +614,8 @@ public class RobotCommService extends Service {
 		_sleeping = true;
 		_commTimer.cancel();
 		if (!_bluetoothProblem) _bluetoothStatus = "Sleeping";
+		RobotCommApplication.getInstance().setBluetoothConnected(false);
+		RobotCommApplication.getInstance().setBluetoothStatus(_bluetoothStatus);
 		_robotStatus = "Sleeping";
 		if (BT != null)
 		{
@@ -604,6 +635,8 @@ public class RobotCommService extends Service {
 			_connection = null;
 			xmpp = null;
 			_XMPPstatus = "Sleeping";
+			RobotCommApplication.getInstance().setXMPPstatus(_XMPPstatus);
+			RobotCommApplication.getInstance().setXMPPconnected(false);
 		}
 
 		if (C2DM != null)
@@ -851,6 +884,7 @@ public class RobotCommService extends Service {
 							_commFlagBT = true;
 							_echoReceivedBT = false;
 							_bluetoothStatus = "Checking bluetooth connection";
+							RobotCommApplication.getInstance().setBluetoothStatus(_bluetoothStatus);
 							Log	.d(TAG,	"Arduino comm timed out, so we will send an echo request to see if BT is still connected");
 							Intent serviceIntent = new Intent();
 							serviceIntent.setAction("com.denbar.RobotComm.RobotCommService");
@@ -869,6 +903,7 @@ public class RobotCommService extends Service {
 						_robotStatus = "bluetooth OK";
 						_latencyBT = _echoReceviedTimeBT - _echoSentTimeBT;
 						if (_latencyBT < TIME_OUT_ARDUINO)_bluetoothStatus = "latency = " + String.valueOf(_latencyBT);
+						RobotCommApplication.getInstance().setBluetoothStatus(_bluetoothStatus);
 						Log.d(TAG, "_latencyBT calculated = " + _latencyBT);
 					}
 				}
@@ -893,6 +928,7 @@ public class RobotCommService extends Service {
 							Log	.d(TAG,	"XMPP comm timed out, so we will request an echo to see if XMPP is still connected");
 							sendServerEcho = true;
 							_XMPPstatus = "Checking XMPP connection";
+							RobotCommApplication.getInstance().setXMPPstatus(_XMPPstatus);
 						}
 					} else if (_echoReceivedXMPP) {
 						Log.d(TAG, "XMPP echo request returned good");
@@ -902,6 +938,7 @@ public class RobotCommService extends Service {
 						_robotStatus = "XMPP OK";
 						_latencyXMPP = _echoReceivedTimeXMPP - _echoSentTimeServer;
 						if (_latencyXMPP < TIME_OUT_XMPP) _XMPPstatus = "latency = " + String.valueOf(_latencyXMPP);
+						RobotCommApplication.getInstance().setXMPPstatus(_XMPPstatus);
 						Log.d(TAG, "_latencyXMPP calculated = " + _latencyXMPP);
 					}
 				}

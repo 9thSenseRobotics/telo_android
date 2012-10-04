@@ -36,7 +36,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
 
 public class RobotCommActivity extends Activity {
 
@@ -207,6 +206,17 @@ public class RobotCommActivity extends Activity {
 				startActivity(startIntent);
 			}
 		});
+		
+		// Set a button listener to switch to standard UI
+		Button btnMonitor = (Button) this.findViewById(R.id.Monitor);
+		btnMonitor.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View view) {
+				RobotCommApplication.getInstance().setDisplayDetails(false);
+				Intent startIntent = new Intent(_context,
+						com.denbar.RobotComm.MonitorActivity.class);
+				startActivity(startIntent);
+			}
+		});
 
 	} // ends on Create
 
@@ -365,6 +375,12 @@ public class RobotCommActivity extends Activity {
 		MyGUItimer = new GUItimer();
 		checkStateTimer.scheduleAtFixedRate(MyGUItimer, 0, timerUpdateRate);
 		updateGUI();
+		if (!RobotCommApplication.getInstance().getDisplayDetails())
+		{
+			Intent startIntent = new Intent(this,com.denbar.RobotComm.MonitorActivity.class);
+			startActivity(startIntent);
+		}
+				
 	}
 
 	@Override

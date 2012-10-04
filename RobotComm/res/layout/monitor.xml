@@ -4,17 +4,25 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
 
+    
+    <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="30dp"
+       android:minWidth="100dp"
+       android:text="@string/version" />
+            
     <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
         android:layout_height="30dp"
         android:orientation="horizontal" >
 
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:minWidth="100dp"
-            android:text="User ID:" />
+            android:minWidth="110dp"
+            android:text="User:" />
 
         <EditText
             android:id="@+id/userid"
@@ -37,14 +45,61 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:minWidth="100dp"
-            android:text="password:" />
+            android:minWidth="110dp"
+            android:text="remote server:" />
 
         <EditText
-            android:id="@+id/password"
+            android:id="@+id/XMPPstatus"
             android:layout_width="199dp"
             android:layout_height="match_parent"
-            android:inputType="textPassword"
+            android:autoText="false"
+            android:capitalize="none"
+            android:minWidth="150dp"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:textSize="11sp" />
+    </LinearLayout>
+<!-- 
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="30dp"
+        android:orientation="horizontal" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:minWidth="100dp"
+            android:text="C2DM: " />
+
+        <EditText
+            android:id="@+id/C2DMstatus"
+            android:layout_width="199dp"
+            android:layout_height="match_parent"
+            android:autoText="false"
+            android:capitalize="none"
+            android:minWidth="150dp"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:textSize="11sp" />
+    </LinearLayout>
+-->
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="30dp"
+        android:orientation="horizontal" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:minWidth="110dp"
+            android:text="Robot:" />
+
+        <EditText
+            android:id="@+id/bluetoothStatus"
+            android:layout_width="199dp"
+            android:layout_height="match_parent"
             android:autoText="false"
             android:capitalize="none"
             android:minWidth="150dp"
@@ -59,22 +114,7 @@
         android:layout_height="30dp"
         android:orientation="horizontal" >
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:minWidth="100dp"
-            android:text="Bluetooth MAC address:" />
 
-        <EditText
-            android:id="@+id/bluetooth"
-            android:layout_width="199dp"
-            android:layout_height="match_parent"
-            android:autoText="false"
-            android:capitalize="none"
-            android:minWidth="150dp"
-            android:scrollHorizontally="true"
-            android:singleLine="true"
-            android:textSize="11sp" />
     </LinearLayout>
 
     <LinearLayout
@@ -83,29 +123,34 @@
         android:layout_height="30dp"
         android:orientation="horizontal" >
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:minWidth="100dp"
-            android:text="Status:" />
-
-        <EditText
-            android:id="@+id/status"
-            android:layout_width="199dp"
-            android:layout_height="match_parent"
-            android:autoText="false"
-            android:capitalize="none"
-            android:minWidth="150dp"
-            android:scrollHorizontally="true"
-            android:singleLine="true"
-            android:textSize="11sp" />
     </LinearLayout>
 
-    <Button
-        android:id="@+id/btnSave"
-        android:layout_width="100dp"
-        android:layout_height="60dp"
-        android:text="Save settings" >
-    </Button>
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="70dp"
+        android:orientation="horizontal" >
 
+        <Button
+            android:id="@+id/Settings"
+            android:layout_width="100dp"
+            android:layout_height="60dp"
+            android:text="Settings" >
+        </Button>
+        
+        <Button
+            android:id="@+id/Details"
+            android:layout_width="100dp"
+            android:layout_height="60dp"
+            android:text="Details" >
+        </Button>
+        
+        <Button
+            android:id="@+id/Connect"
+            android:layout_width="100dp"
+            android:layout_height="60dp"
+            android:text="Connect" >
+        </Button>       
+        
+    </LinearLayout>
 </LinearLayout>

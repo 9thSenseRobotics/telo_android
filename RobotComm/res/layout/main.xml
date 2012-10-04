@@ -297,29 +297,44 @@
     <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
-        android:layout_height="70dp"
+        android:layout_height="40dp"
         android:orientation="horizontal" >
 
         <Button
             android:id="@+id/btnSendToServer"
             android:layout_width="120dp"
-            android:layout_height="60dp"
+            android:layout_height="40dp"
             android:text="Send to Server" >
         </Button>
-
+        
         <Button
             android:id="@+id/Settings"
             android:layout_width="100dp"
-            android:layout_height="60dp"
+            android:layout_height="40dp"
             android:text="Settings" >
+        </Button>  
+    </LinearLayout>
+    
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="40dp"
+        android:orientation="horizontal" >
+        
+        <Button
+            android:id="@+id/Monitor"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:text="Monitor" >
         </Button>
 
         <Button
             android:id="@+id/Connect"
             android:layout_width="100dp"
-            android:layout_height="60dp"
+            android:layout_height="40dp"
             android:text="Connect" >
         </Button>
+        
     </LinearLayout>
 
 </LinearLayout>

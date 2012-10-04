@@ -48,23 +48,25 @@ public class UpdateWidgetService extends Service {
 				RobotCommWidget.class);
 		int[] allWidgetIds2 = appWidgetManager.getAppWidgetIds(thisWidget);
 
-		_XMPPstatus = intent.getStringExtra("XMPP");
-		_C2DMstatus = intent.getStringExtra("C2DM");
-		_bluetoothStatus = intent.getStringExtra("bluetooth");
-		_sentToServer = intent.getStringExtra("sentToServer");
-		_sentToRobot = intent.getStringExtra("sentToRobot");
+		//_XMPPstatus = intent.getStringExtra("XMPP");
+		//_C2DMstatus = intent.getStringExtra("C2DM");
+		//_bluetoothStatus = intent.getStringExtra("bluetooth");
+		//_sentToServer = intent.getStringExtra("sentToServer");
+		//_sentToRobot = intent.getStringExtra("sentToRobot");
 
 		for (int widgetId : allWidgetIds2) {
-			if (_XMPPstatus != null)
+			_bluetoothStatus = "Robot status: Bluetooth " + RobotCommApplication.getInstance().getBluetoothStatus();
+			_XMPPstatus = "Remote Server status: " + RobotCommApplication.getInstance().getXMPPstatus();
+			//if (_XMPPstatus != null)
 				remoteViews.setTextViewText(R.id.XMPP, _XMPPstatus);
-			if (_C2DMstatus != null)
-				remoteViews.setTextViewText(R.id.C2DM, _C2DMstatus);
-			if (_bluetoothStatus != null)
+			//if (_C2DMstatus != null)
+				//remoteViews.setTextViewText(R.id.C2DM, _C2DMstatus);
+			//if (_bluetoothStatus != null)
 				remoteViews.setTextViewText(R.id.bluetooth, _bluetoothStatus);
-			if (_sentToServer != null)
-				remoteViews.setTextViewText(R.id.sentToServer, _sentToServer);
-			if (_sentToRobot != null)
-				remoteViews.setTextViewText(R.id.sentToRobot, _sentToRobot);
+			//if (_sentToServer != null)
+				//remoteViews.setTextViewText(R.id.sentToServer, _sentToServer);
+			//if (_sentToRobot != null)
+				//remoteViews.setTextViewText(R.id.sentToRobot, _sentToRobot);
 			appWidgetManager.updateAppWidget(widgetId, remoteViews);
 
 			/*
