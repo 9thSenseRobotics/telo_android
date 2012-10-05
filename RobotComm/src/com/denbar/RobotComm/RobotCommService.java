@@ -67,9 +67,9 @@ public class RobotCommService extends Service {
 	private long _timeBTconnectionLost, _timeXMPPconnectionLost, _timeC2DMconnectionLost, _lastTimeValue = 0;
 	private long _lastArrivalTime = 0, _lastPacketSentTime;
 	private boolean _echoReceivedBT = false, _echoReceivedXMPP = false,	_echoReceivedC2DM = false;
-	private double TIME_OUT_ARDUINO = 30000, TIME_OUT_XMPP = 29000, TIME_OUT_C2DM = 30000000;
+	private double TIME_OUT_ARDUINO = 60000, TIME_OUT_XMPP = 59000, TIME_OUT_C2DM = 30000000;
 	private long MIN_TIME_BETWEEN_ARDUINO_COMMANDS = 100, MIN_TIME_BETWEEN_PACKET_OUTPUTS = 100;
-	private static final long timerUpdateRate = 9000;
+	private static final long timerUpdateRate = 19000;
 	private Timer _ckCommTimer;
 	private checkCommTimer _commTimer;
 	private boolean _commFlagBT = false, _commFlagC2DM = false,	_commFlagXMPP = false;
@@ -428,6 +428,7 @@ public class RobotCommService extends Service {
 			_bluetoothProblem = false;
 			updateWidget();
 			Log.d(TAG, "Bluetooth connected");
+			sendDataToArduino("c");	// send a comm cehck so that we get an initial battery percentage
 			//Toast.makeText(this, "Bluetooth connected", Toast.LENGTH_SHORT).show();
 		} else {
 			//Toast.makeText(this, "Bluetooth connection failed, opening RobotCommActivity", Toast.LENGTH_LONG).show();
