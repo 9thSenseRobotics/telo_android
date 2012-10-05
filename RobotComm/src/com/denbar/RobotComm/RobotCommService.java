@@ -67,9 +67,9 @@ public class RobotCommService extends Service {
 	private long _timeBTconnectionLost, _timeXMPPconnectionLost, _timeC2DMconnectionLost, _lastTimeValue = 0;
 	private long _lastArrivalTime = 0, _lastPacketSentTime;
 	private boolean _echoReceivedBT = false, _echoReceivedXMPP = false,	_echoReceivedC2DM = false;
-	private double TIME_OUT_ARDUINO = 3000000, TIME_OUT_XMPP = 3000000, TIME_OUT_C2DM = 30000000;
+	private double TIME_OUT_ARDUINO = 30000, TIME_OUT_XMPP = 29000, TIME_OUT_C2DM = 30000000;
 	private long MIN_TIME_BETWEEN_ARDUINO_COMMANDS = 100, MIN_TIME_BETWEEN_PACKET_OUTPUTS = 100;
-	private static final long timerUpdateRate = 9000000;
+	private static final long timerUpdateRate = 9000;
 	private Timer _ckCommTimer;
 	private checkCommTimer _commTimer;
 	private boolean _commFlagBT = false, _commFlagC2DM = false,	_commFlagXMPP = false;
@@ -368,7 +368,7 @@ public class RobotCommService extends Service {
 		// if (connectC2DM())
 		// {
 		// Log.d(TAG, "reconnected to C2DM server");
-		// _lastXMPPreceivedTime = System.currentTimeMillis(); // give it some
+		// _lastC2DMreceivedTime = System.currentTimeMillis(); // give it some
 		// time to settle down before testing it
 		// Log.d(TAG, "_lastC2DMreceivedTime set in tryResetXMPP");
 		// }
@@ -721,7 +721,9 @@ public class RobotCommService extends Service {
 				Log.d(TAG, "in processPacket, testString: " + testString);
 				String testXML = message.toXML();
 				Log.d(TAG, "in processPacket, testXML: " + testXML);
+				_lastXMPPreceivedTime = System.currentTimeMillis();
 				if (message.getBody() != null) {
+					//_messageReceivedFromServer = message.getBody();
 					if (System.currentTimeMillis() - _lastPacketSentTime < MIN_TIME_BETWEEN_PACKET_OUTPUTS)
 					{
 						Log.d(TAG, "Waiting for min time until we can change the value of the global variable _XMPPcommand");
@@ -942,6 +944,7 @@ public class RobotCommService extends Service {
 						Log.d(TAG, "_latencyXMPP calculated = " + _latencyXMPP);
 					}
 				}
+				/*
 				if ((!_C2DMproblem) && _triedC2DMconnect) // skip if C2DM is out or never tried
 				{
 					if (System.currentTimeMillis() - _lastC2DMreceivedTime > TIME_OUT_C2DM) {
@@ -972,6 +975,7 @@ public class RobotCommService extends Service {
 						Log.d(TAG, "_latencyC2DM calculated = " + _latencyC2DM);
 					}
 				}
+				*/
 				if (sendServerEcho) {
 					_robotStatus = "Checking XMPP and C2DM connections";
 					_commFlagXMPP = true;
@@ -993,7 +997,8 @@ public class RobotCommService extends Service {
 					serviceIntent.putExtra("SendToServer", "commCheckServer");
 					_context.startService(serviceIntent);
 				}
-			} else
+				
+			} else	// corresponds to if(entriesTest())
 				Log.d(TAG, "failed EntriesTest in timer task");
 		}
 	}
@@ -1034,6 +1039,8 @@ public class RobotCommService extends Service {
 		{
 					_echoReceivedXMPP = true; // just an echo, don't send it along
 					_echoReceivedTimeXMPP = System.currentTimeMillis();
+					if (_messageReceivedFromServer.length() > 80) _messageReceivedFromServer = _messageReceivedFromServer.substring(0, 80);
+					_messageReceivedFromServer = "connected " + _messageReceivedFromServer;
 					Log.d(TAG, "in processMessageFromXMPPServer, _echoReceivedTimeXMPP updated ");
 					return;
 		}
@@ -1082,7 +1089,6 @@ public class RobotCommService extends Service {
 		_robotCommand = robotCommand;
 		if (_messageReceivedFromServer.length() > 80) _messageReceivedFromServer = _messageReceivedFromServer.substring(0, 80);
 		_messageReceivedFromServer = robotCommand + " " + _messageReceivedFromServer;
-		//_messageReceivedFromServer = _robotCommand;
 		_lastArrivalTime = System.currentTimeMillis();
 		
 
@@ -1130,6 +1136,7 @@ public class RobotCommService extends Service {
 	{
 		Log.d(TAG, "in processMessageFromC2DMServer " + messageFromServer);
 		//_C2DMstatus = "Connected";
+		_messageReceivedFromServer = messageFromServer;
 		String robotCommand = null, timeStamp = null;
 		if (messageFromServer.contains("<"))
 		{

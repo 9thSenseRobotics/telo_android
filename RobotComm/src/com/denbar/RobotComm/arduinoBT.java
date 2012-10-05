@@ -118,19 +118,23 @@ public class arduinoBT {
 			return false;
 
 		}
+		RobotCommApplication.getInstance().addNoteString("Trying to connect to bluetooth...");
 
 		try {
 			if (!openBT()) {
 				Log.d(TAG, "openBT returned false");
+				RobotCommApplication.getInstance().addNoteString("Unable to find the paired robot's bluetooth device");
 				return false;
 			}
 		} catch (IOException ex) {
 			Log.d(TAG, "OpenBT returned exception" + ex);
+			RobotCommApplication.getInstance().addNoteString("OpenBT returned an Android exception" + ex);
 			return false;
 		}
 		_isConnected = true;
 		ListenForData();
 		Log.d(TAG, "OpenBT: BT connected");
+		RobotCommApplication.getInstance().addNoteString("Bluetooth successfully connected");
 		return true;
 	}
 
@@ -182,44 +186,50 @@ public class arduinoBT {
 			Log.d(TAG, "BT previously enabled");
 
 		// get remote BTs that are paired with us
-		Set<BluetoothDevice> pairedDevices = _bluetoothAdapter
-				.getBondedDevices();
+		Set<BluetoothDevice> pairedDevices = _bluetoothAdapter.getBondedDevices();
 		if (pairedDevices == null) {
 			Log.d(TAG, "No paired BT devices");
+			RobotCommApplication.getInstance().addNoteString("No paired BT devices");
 			return false;
 		}
 		if (pairedDevices.size() > 0) {
+			RobotCommApplication.getInstance().addNoteString("We are paired to the following BT devices: ");
+			Log.d(TAG, "We are paired to the following BT devices: ");
 			for (BluetoothDevice device : pairedDevices) {
-				if (device.getName().startsWith("FireFly-")
-						|| device.getName().startsWith("RN42-")) {
-					_bluetoothTarget = device;
-					Log.d(TAG, "Found ardunio BT device named "
-							+ _bluetoothTarget.getName());
-					Log.d(TAG, "device address is "	+ _bluetoothTarget.getAddress());
-					break;
-				}
+				//if (device.getName().startsWith("FireFly-")
+				//		|| device.getName().startsWith("RN42-")) {
+					Log.d(TAG, device.getName() + " device address is " + device.getAddress());
+					RobotCommApplication.getInstance().addNoteString(device.getName() + " device address is " + device.getAddress());
+					if (_BTaddress.equals(device.getAddress()))	// we are paired with the robot's bluetooth-- yay!
+					{
+						_bluetoothTarget = device;
+					}
+				//}
 			}
+			if (_bluetoothTarget != null)
+			{
+				Log.d(TAG,"We are paired with the robot's bluetooth, it's address is " + _bluetoothTarget.getAddress() + " matching our target " + _BTaddress);
+				RobotCommApplication.getInstance().addNoteString("We are paired with the robot's bluetooth, it's address is " + _bluetoothTarget.getAddress() + " matching our target " + _BTaddress);				
+			}
+			else
+			{
+				Log.d(TAG,"No paired device matches with the robot's bluetooth address: " + _BTaddress);
+				RobotCommApplication.getInstance().addNoteString("No paired device matches with the robot's bluetooth address: " + _BTaddress);
+				return false;
+			}				
 		} else {
 			Log.d(TAG, "BT adapter is not STATE_ON so we could not list paired BT devices");
+			RobotCommApplication.getInstance().addNoteString("BT is not enabled, please turn on the tablet's bluetooth");
 			return false;
 		}
 
-		if (_bluetoothTarget == null) {
-			Log.d(TAG, "no BT target found that matches our BT device");
-			return false;
-		}
-
-		if (_bluetoothTarget.getBondState() != BluetoothDevice.BOND_BONDED) {
-			Log.d(TAG, "Unable to find a paired arduino BT");
-			return false;
-		}
-
+		return true;
 		// for some reason, the device found through the above routine does not
 		// work properly
 		// when we use it and call connect, it generates an exception
 		// "Service failed discovery"
 		// so we have to find the device using the MAC address instead.
-
+/*
 		if (BluetoothAdapter.checkBluetoothAddress(_BTaddress)) {
 			_bluetoothTarget = _bluetoothAdapter.getRemoteDevice(_BTaddress);
 			// A BluetoothDevice will always be returned for a valid hardware address,
@@ -227,15 +237,19 @@ public class arduinoBT {
 			// so we need to check that we are paired with this one
 			if (_bluetoothTarget.getBondState() == BluetoothDevice.BOND_BONDED) {
 				Log.d(TAG, "Our arduino BT device is recognized as paired");
+				RobotCommApplication.getInstance().addNoteString("Our arduino BT device is recognized as paired");
 			} else {
 				Log.d(TAG, "The BT found with our address is not paired");
+				RobotCommApplication.getInstance().addNoteString("The BT found with our address is not paired");
 				return false;
 			}
 		} else {
 			Log.d(TAG, "invalid BT address");
+			RobotCommApplication.getInstance().addNoteString("invalid BT address");
 			return false;
 		}
 		return true;
+		*/
 	}
 
 	// open the connection

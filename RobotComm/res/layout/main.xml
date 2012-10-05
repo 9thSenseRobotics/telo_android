@@ -336,5 +336,30 @@
         </Button>
         
     </LinearLayout>
+    
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:minWidth="100dp"
+            android:text="Notes:" />
+
+        <EditText
+            android:id="@+id/Notes"
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent"
+            android:autoText="false"
+            android:capitalize="none"
+            android:minWidth="200dp"
+            android:scrollHorizontally="true"
+            android:singleLine="false"
+            android:gravity="top|left" 
+            android:textSize="11sp" />
+    </LinearLayout>   
 
 </LinearLayout>

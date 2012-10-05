@@ -44,7 +44,7 @@ public class RobotCommActivity extends Activity {
 	public final static String REGISTERED_C2DM = "registered";
 
 	private com.denbar.RobotComm.RobotCommService serviceBinder = null;
-	private EditText editReceivedFromServer, editReceivedFromRobot;
+	private EditText editReceivedFromServer, editReceivedFromRobot, editNotes;
 	private EditText editSendToRobot, editSentToRobot, editSendToServer,
 			editSentToServer;
 	// private EditText editHost, editPort, editUserID, editService,
@@ -85,6 +85,7 @@ public class RobotCommActivity extends Activity {
 		editReceivedFromServer = (EditText) findViewById(R.id.receivedFromServer);
 		editSentToServer = (EditText) findViewById(R.id.sentToServer);
 		editSendToServer = (EditText) findViewById(R.id.sendToServer);
+		editNotes = (EditText) findViewById(R.id.Notes);
 
 		// Set a button listener to send a message to the server (chat)
 		Button sendToServer = (Button) this.findViewById(R.id.btnSendToServer);
@@ -431,6 +432,14 @@ public class RobotCommActivity extends Activity {
 				editSentToServer.setText(serviceBinder._messageSentToServer);
 				editReceivedFromRobot.setText(serviceBinder._messageReceivedFromRobot);
 				editSentToRobot.setText(serviceBinder._messageSentToRobot);
+				String Notes = "";
+				Notes += "Number of notes = " + RobotCommApplication.getInstance().getNumberOfNoteStrings() + "\n";
+				for (int i = 1; i <= RobotCommApplication.getInstance().getNumberOfNoteStrings(); i++)
+				{
+					Notes += RobotCommApplication.getInstance().getNoteString(i) + "\n";
+				}
+				editNotes.setText(Notes);
+				
 			}
 		});
 	}

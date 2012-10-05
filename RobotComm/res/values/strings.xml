@@ -16,7 +16,7 @@
     <string name="preferencesStatus">not saved yet</string>
     <string name="quit">Quit</string>
     <string name="help">Help</string>
-    <string name="version">  RobotComm v1.1</string>
+    <string name="version">  RobotComm v1.11</string>
     <string name="startingOrientation">180</string>
 
     <color name="background_color">#000000</color>

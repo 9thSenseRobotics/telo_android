@@ -4,19 +4,23 @@ import android.app.Application;
 import android.content.res.Configuration;
 
 
+
 public class RobotCommApplication extends Application {
 
-    private static RobotCommApplication singleton;
+	private static RobotCommApplication singleton;
 
+	private static final int NOTE_STRINGS_ARRAY_SIZE = 32;
     // global variables
     private boolean _bluetoothConnected, _XMPPconnected, _googleCloudConnected, _displayDetails;
     private String _bluetoothAddress;
     private String _bluetoothStatus, _XMPPstatus, _googleCloudStatus;
+    private String[] _noteString;
+    private int _numNoteStrings;
 
 
     public static RobotCommApplication getInstance()
     {
-    		return singleton;
+    	return singleton;
     }
 
     // setup global variables here
@@ -102,6 +106,32 @@ public class RobotCommApplication extends Application {
     	return _googleCloudStatus;
     }
     
+    public void addNoteString(String value)
+    {
+    	_numNoteStrings++;
+    	if (_numNoteStrings > NOTE_STRINGS_ARRAY_SIZE - 1) // don't overflow the array, but keep the last 5 messages
+    	{
+    			_numNoteStrings = 1;
+    			for (int i = NOTE_STRINGS_ARRAY_SIZE - 5; i < NOTE_STRINGS_ARRAY_SIZE; i++)
+    			{
+    				_noteString[_numNoteStrings] = _noteString[i];
+    				_numNoteStrings++;	
+    			}
+    	}
+    	_noteString[_numNoteStrings] = value;
+    }
+    
+    public String getNoteString(int noteNumber)
+    {
+    	if (noteNumber >=0 && noteNumber <= _numNoteStrings) return _noteString[noteNumber];
+    	else return _noteString[0];
+    }
+    
+    public int getNumberOfNoteStrings()
+    {
+    	return _numNoteStrings;
+    }
+    
     public void setGoogleCloudStatus(String value)
     {
     	_googleCloudStatus = value;
@@ -120,6 +150,9 @@ public class RobotCommApplication extends Application {
     	_googleCloudConnected = false;
     	_googleCloudStatus = "Not connected yet";
     	_displayDetails = false;
+    	_noteString = new String[NOTE_STRINGS_ARRAY_SIZE];
+    	_noteString[0] = "No message";
+    	_numNoteStrings = 0;
     }
 
     // other life cycle events are included here just as a reminder of what overrides are available
