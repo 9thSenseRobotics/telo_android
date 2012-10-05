@@ -13,7 +13,7 @@ public class RobotCommApplication extends Application {
     // global variables
     private boolean _bluetoothConnected, _XMPPconnected, _googleCloudConnected, _displayDetails;
     private String _bluetoothAddress;
-    private String _bluetoothStatus, _XMPPstatus, _googleCloudStatus;
+    private String _bluetoothStatus, _XMPPstatus, _googleCloudStatus, _batteryPercent;
     private String[] _noteString;
     private int _numNoteStrings;
 
@@ -39,6 +39,16 @@ public class RobotCommApplication extends Application {
     public void setDisplayDetails(boolean value)
     {
     	_displayDetails = value;
+    }
+    
+    public void setBatteryPercentage(String value)
+    {
+    	_batteryPercent =  value;
+    }
+    
+    public String getBatteryPercentage()
+    {
+    	return _batteryPercent;
     }
 
     public void setBluetoothAddress(String value)
@@ -141,6 +151,7 @@ public class RobotCommApplication extends Application {
     public final void onCreate() {
     	super.onCreate();
     	singleton = this;
+    	_batteryPercent = "checking";
     	_bluetoothAddress = "incorrect address";  // this needs to set by the program,
     		// otherwise every bot would needs its own compiled software version
     	_bluetoothConnected = false;

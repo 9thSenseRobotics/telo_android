@@ -28,7 +28,7 @@ import android.widget.RemoteViews;
 
 public class UpdateWidgetService extends Service {
 	private static final String LOG = "UpdatewidgetService";
-	private String _XMPPstatus, _C2DMstatus, _bluetoothStatus, _sentToRobot, _sentToServer;
+	private String _XMPPstatus, _C2DMstatus, _bluetoothStatus, _sentToRobot, _sentToServer, _batteryPercent;
 	private AppWidgetManager appWidgetManager;
 	private RemoteViews remoteViews;
 
@@ -57,6 +57,7 @@ public class UpdateWidgetService extends Service {
 		for (int widgetId : allWidgetIds2) {
 			_bluetoothStatus = "Robot status: Bluetooth " + RobotCommApplication.getInstance().getBluetoothStatus();
 			_XMPPstatus = "Remote Server status: " + RobotCommApplication.getInstance().getXMPPstatus();
+			_batteryPercent = "Battery Percent = " + RobotCommApplication.getInstance().getBatteryPercentage();
 			//if (_XMPPstatus != null)
 				remoteViews.setTextViewText(R.id.XMPP, _XMPPstatus);
 			//if (_C2DMstatus != null)
@@ -67,6 +68,7 @@ public class UpdateWidgetService extends Service {
 				//remoteViews.setTextViewText(R.id.sentToServer, _sentToServer);
 			//if (_sentToRobot != null)
 				//remoteViews.setTextViewText(R.id.sentToRobot, _sentToRobot);
+				remoteViews.setTextViewText(R.id.battery, _batteryPercent);
 			appWidgetManager.updateAppWidget(widgetId, remoteViews);
 
 			/*

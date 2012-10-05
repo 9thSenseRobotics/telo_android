@@ -56,7 +56,7 @@ public class RobotCommService extends Service {
 	public String _bluetoothStatus = "Not connected yet", _XMPPstatus = "Not Connected Yet";
 	public String _C2DMstatus = "Not connected yet";
 	public String _messageReceivedFromRobot = "", _messageSentToRobot = "";
-	public String _messageSentToServer = "", _messageReceivedFromServer = "";
+	public String _messageSentToServer = "", _messageReceivedFromServer = "", _batteryPercentage = "checking";
 	public String _robotStatus, _startingOrientationString, _currentOrientationString;
 	public int _startingOrientation, _currentOrientation;
 	public long _lastXMPPreceivedTime, _lastC2DMreceivedTime, _lastArduinoReceivedTime, _lastCommandSentToArduinoTime;
@@ -90,7 +90,6 @@ public class RobotCommService extends Service {
 		orientation = new Orientation(this);
 		
 		_packetListener = createPacketListener();
-
 
 		getPreferences();
 
@@ -210,11 +209,25 @@ public class RobotCommService extends Service {
 				// don't send along the echos to the server, for those we just
 				// want to capture the time
 				// so that we know we still have a good BT connection
-				if (messageFromRobot.startsWith("c") && _commFlagBT) // be sure it is a response to echo request
+				if (messageFromRobot.startsWith("c")) // be sure it is a response to echo request
 				{
-					_echoReceviedTimeBT = System.currentTimeMillis(); // just a local BT echo, record the echo time
-					_echoReceivedBT = true;
-					Log.d(TAG, "_echoReceivedTimeBT updated");
+					// pickup the battery percentage as something to do when comm checking
+					_batteryPercentage = messageFromRobot.substring(1);
+					RobotCommApplication.getInstance().setBatteryPercentage(_batteryPercentage);
+					updateWidget();
+					
+					//try  {
+					//	_batteryPercentage = Integer.parseInt(batteryPercentageString);	
+					//}
+					//catch (NumberFormatException nfe) {
+					//	Log.d(TAG, "in comm check string from arduino, batteryPercentageString is not an integer, it is: " + batteryPercentageString );
+					//}
+					if (_commFlagBT)
+					{
+						_echoReceviedTimeBT = System.currentTimeMillis(); // just a local BT echo, record the echo time
+						_echoReceivedBT = true;				
+						Log.d(TAG, "_echoReceivedTimeBT updated");
+					}
 				} else {
 					_messageReceivedFromRobot = messageFromRobot;
 					// check to see if it is a message that

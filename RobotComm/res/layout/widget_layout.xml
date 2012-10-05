@@ -78,7 +78,16 @@
                 android:layout_margin="4dip"
                 android:text="sent to robot:" >
             </TextView>
+            
 -->
+            <TextView
+                android:id="@+id/battery"
+                style="@android:style/TextAppearance.Medium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dip"
+                android:text="battery percentage = " >
+            </TextView>
         </LinearLayout>
     </LinearLayout>
 
