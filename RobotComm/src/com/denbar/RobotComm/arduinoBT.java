@@ -261,6 +261,7 @@ public class arduinoBT {
 			_bluetoothAdapter.cancelDiscovery();
 		else {
 			Log.d(TAG, "trying to connect without a BT adapter");
+			RobotCommApplication.getInstance().addNoteString("trying to connect without a BT adapter");
 			return false;
 		}
 		// if the socket was used before, we have to close it before trying to reconnect
@@ -271,16 +272,20 @@ public class arduinoBT {
 				_socket.close();
 			} catch (IOException ex) {
 				Log.d(TAG, "socket close exeception" + ex);
+				RobotCommApplication.getInstance().addNoteString("socket close returned exception " + ex);
 			}
 		}
 
 		try {
-			_socket = _bluetoothTarget.createRfcommSocketToServiceRecord(uuid);
+			//_socket = _bluetoothTarget.createRfcommSocketToServiceRecord(uuid);
+			_socket = _bluetoothTarget.createInsecureRfcommSocketToServiceRecord(uuid);
 		} catch (IOException ex) {
-			Log.d(TAG, "createRf returned exception " + ex);
+			Log.d(TAG, "createRfcomm returned exception " + ex);
+			RobotCommApplication.getInstance().addNoteString("createRfcomm returned exception " + ex);
 			return false;
 		}
 
+		RobotCommApplication.getInstance().addNoteString("socket created successfully");
 		// if we try to connect multiple times very fast
 		// _socket.connect still throws the exception: java.io.IOException:
 		// Service discovery failed
@@ -289,14 +294,16 @@ public class arduinoBT {
 			_socket.connect();
 		} catch (IOException ex) {
 			Log.d(TAG, "socket.connect returned exception " + ex);
+			RobotCommApplication.getInstance().addNoteString("socket.connect returned exception " + ex);
 			return false;
 		}
-
+		RobotCommApplication.getInstance().addNoteString("socket connected successfully");
 		try {
 			_outputStream = _socket.getOutputStream();
 			_inputStream = _socket.getInputStream();
 		} catch (IOException ex) {
 			Log.d(TAG, "getting streams returned exception " + ex.getMessage());
+			RobotCommApplication.getInstance().addNoteString("getting streams returned exception " + ex.getMessage());
 			return false;
 		}
 		return true;
@@ -323,11 +330,13 @@ public class arduinoBT {
 			if (bytesAvailable > 0) 
 			{
 				Log.d(TAG, "bluetooth connection checked good ");
+				RobotCommApplication.getInstance().addNoteString("bluetooth connection checked good ");
 				return true;
 			}
 			counter++;
 		}
 		Log.d(TAG, "bluetooth connection checked bad");
+		RobotCommApplication.getInstance().addNoteString("bluetooth connection checked bad ");
 		return false;
 	    /*
 	    Handler handler = new Handler(); 

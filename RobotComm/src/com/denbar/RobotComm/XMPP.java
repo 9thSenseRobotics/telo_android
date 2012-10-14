@@ -26,7 +26,6 @@ import org.jivesoftware.smack.packet.Presence;
 
 import android.content.Context;
 import android.util.Log;
-import android.widget.Toast;
 
 public class XMPP {
 	private static final String TAG = "XMPP";
@@ -41,6 +40,7 @@ public class XMPP {
 		_context = CallingContext;
 		_commParametersSet = false;
 		_connection = null;
+		//org.jivesoftware.smack.SmackAndroid.init(CallingContext);
 	}
 
 	public void setCommParameters(String host, int portNumber, String service,
@@ -68,17 +68,35 @@ public class XMPP {
 		} else {
 			Log.d(TAG, "XMPP parameters:" + _host + " " + _portNumber + " "
 					+ _service + " " + _userid + " " + _password);
-		}
-		ConnectionConfiguration connConfig = new ConnectionConfiguration(_host,
-				_portNumber, _service);
+		}	
+		
+		ConnectionConfiguration connConfig = new ConnectionConfiguration(_host,	_portNumber); //, _service);
+		Log.d(TAG, "ConnectionConfiguration done");
+		RobotCommApplication.getInstance().addNoteString("ConnectionConfiguration done");		
+		
+		//connConfig.setTruststoreType("AndroidCAStore");
+		//connConfig.setTruststorePassword(null);
+		//connConfig.setTruststorePath(null);
+		//connConfig.setSASLAuthenticationEnabled(true);
+		
+		
+		
+		
+		
+			
+
 		connConfig.setSASLAuthenticationEnabled(false);
 		XMPPConnection connection = new XMPPConnection(connConfig);
+		RobotCommApplication.getInstance().addNoteString("XMPPConnection created");
+		Log.d(TAG, "Connection created");
 		try {
 			connection.connect();
+			RobotCommApplication.getInstance().addNoteString("connection connected");
 			Log.i(TAG, "[SettingsDialog] Connected to " + connection.getHost());
 		} catch (XMPPException ex) {
 			Log.e(TAG, "[SettingsDialog] Failed to connect to "
 					+ connection.getHost());
+			RobotCommApplication.getInstance().addNoteString("Failed to connect");
 			Log.e(TAG, ex.toString());
 			//Toast.makeText(_context, "XMPP Server connection failed", Toast.LENGTH_SHORT).show();
 			return false;

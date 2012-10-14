@@ -32,6 +32,7 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -68,6 +69,9 @@ public class RobotCommActivity extends Activity {
 		//Toast.makeText(this, "RobotComm activity created", Toast.LENGTH_SHORT).show();
 
 		_context = this;
+		
+	    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+	    StrictMode.setThreadPolicy(policy);
 
 		checkStateTimer = new Timer("checkState"); // setup timer
 		MyGUItimer = new GUItimer();

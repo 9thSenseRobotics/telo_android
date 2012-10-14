@@ -57,8 +57,8 @@ public class RobotCommService extends Service {
 	public String _C2DMstatus = "Not connected yet";
 	public String _messageReceivedFromRobot = "", _messageSentToRobot = "";
 	public String _messageSentToServer = "", _messageReceivedFromServer = "", _batteryPercentage = "checking";
-	public String _robotStatus, _startingOrientationString, _currentOrientationString;
-	public int _startingOrientation, _currentOrientation;
+	public String _robotStatus, _startingTiltString, _currentTiltString, _rotationSinceLastTurnCommandSentString;
+	public int _startingTilt, _currentTilt;
 	public long _lastXMPPreceivedTime, _lastC2DMreceivedTime, _lastArduinoReceivedTime, _lastCommandSentToArduinoTime;
 	public long _latencyXMPP = 0, _echoReceivedTimeXMPP, _echoSentTimeServer;
 	public long _latencyC2DM = 0, _echoReceivedTimeC2DM;
@@ -83,7 +83,7 @@ public class RobotCommService extends Service {
 		Log.d(TAG, "in onCreate");
 		//Toast.makeText(this, "RobotCommService created", Toast.LENGTH_SHORT).show();
 		_context = this;
-		_robotStatus = "Nominal ";
+		_robotStatus = "Starting service ";
 
 		BT = new arduinoBT(this);
 		xmpp = new XMPP(this);
@@ -128,7 +128,7 @@ public class RobotCommService extends Service {
 		bluetooth = prefs.getString("bluetooth",robotResources.getString(R.string.bluetooth)).toUpperCase();
 		recipientForEcho = prefs.getString("recipientForEcho", robotResources.getString(R.string.sendCommandEchoServerAddress));
 		recipient = prefs.getString("recipient", robotResources.getString(R.string.sendMessageToXMPPserverAddress));
-		_startingOrientationString = prefs.getString("startingOrientation", robotResources.getString(R.string.startingOrientation));
+		_startingTiltString = prefs.getString("startingTilt", robotResources.getString(R.string.startingTilt));
 	}
 
 	@Override
@@ -194,14 +194,14 @@ public class RobotCommService extends Service {
 				Log.d(TAG, "MonitorActivity sent Connect command");
 			}
 
-			if (messageFromC2DM != null)
+			else if (messageFromC2DM != null)
 			{
 				processMessageFromC2DMServer(messageFromC2DM);
 				Log.d(TAG, "C2DM message received: " + messageFromC2DM);
 			}
 			// received a message from the arduino via the bluetooth, intent
 			// sent from arduinoBT
-			if (messageFromRobot != null) {
+			else if (messageFromRobot != null) {
 				Log.d(TAG, "messageFromRobot: " + messageFromRobot);
 				_lastArduinoReceivedTime = System.currentTimeMillis(); // record the time
 				Log.d(TAG, "_lastArduinoReceivedTime updated");
@@ -241,10 +241,10 @@ public class RobotCommService extends Service {
 			// received from the bluetooth comm check
 			// both XMPP and RobotCommActivity call sendDataToArduino directly
 			// rather than with an intent
-			if (commCheckBT != null) sendDataToArduino(commCheckBT);			
+			else if (commCheckBT != null) sendDataToArduino(commCheckBT);			
 
 			// received when a connection has gone bad
-			if (reset != null) {
+			else if (reset != null) {
 				if (reset.equals("bluetooth"))
 					tryResetBluetooth();
 				else if (reset.equals("XMPP"))
@@ -262,7 +262,7 @@ public class RobotCommService extends Service {
 			// come from BT
 			// so it is either a user chat from RobotCommActivity or
 			// a Server comm check requesting an echo
-			if (requestServer != null) {
+			else if (requestServer != null) {
 				if (requestServer.equals("commCheckServer")) messageToServer(requestServer, "a"); // asking for an echo
 				else messageToServer(requestServer, "m"); // just send data or a message
 			}
@@ -270,7 +270,7 @@ public class RobotCommService extends Service {
 			// this else will run on system start or restart,
 			// so we check connections and, if they are good,
 			// we let the XMPP server know we are up
-			if (bootup != null)
+			else if (bootup != null)
 			{
 				if (EntriesTest()) {
 					Log.d(TAG, "Connecting to servers and BT at bootup or restart");
@@ -280,7 +280,7 @@ public class RobotCommService extends Service {
 					else if (!xmpp.getConnectionState()) connectXMPP(); 
 					if (BT.getConnectionState() && xmpp.getConnectionState() && (bootup != null))
 					{
-						moveToStartOrientation();
+						moveToStartTilt();
 					}
 				} else	Log.d(TAG, "Failed entriesTest in onStartCommand");
 			}
@@ -293,20 +293,21 @@ public class RobotCommService extends Service {
 	}
 
 	// moves the tablet to the correct position to start a session
-	private void moveToStartOrientation()
+	private void moveToStartTilt()
 	{
-		int tempOrientation;
+		int tempTilt;
 		try  {
-			tempOrientation = Integer.parseInt(orientation._pitchString);
+			tempTilt = Integer.parseInt(orientation._yawString);
 			
 		}
 		catch (NumberFormatException nfe) {
-			tempOrientation = 0;
-			Log.d(TAG, "in startOrientation, orientation._pitchString is not an integer, it is: " + orientation._pitchString );
-			return;
+			tempTilt = 0;
+			Log.d(TAG, "in startTilt, orientation._yawString is not an integer, it is: " + orientation._yawString );
+			RobotCommApplication.getInstance().addNoteString("in startTilt, orientation._yawString is not an integer, it is: " + orientation._yawString );
 		}
-		int degreesToMove =  tempOrientation - _startingOrientation;
-		Log.d(TAG, "in startOrientation, degreesToMove = " + degreesToMove);
+		int degreesToMove =  tempTilt - _startingTilt;
+		Log.d(TAG, "in startTilt, degreesToMove = " + degreesToMove);
+		RobotCommApplication.getInstance().addNoteString("in startTilt, degreesToMove = " + degreesToMove);
 		String command = "u";
 		if (degreesToMove < 0)
 		{
@@ -325,8 +326,10 @@ public class RobotCommService extends Service {
 				_commFlagBT = false;
 				_echoReceivedBT = false;
 				_robotStatus = "Resetting BT";
+				_bluetoothStatus = "Trying to reset";
 				_lastArduinoReceivedTime = System.currentTimeMillis(); // give it some time to settle down before testing it
 				Log.d(TAG, "_lastArduinoReceivedTime set in tryResetBluetooth");
+				RobotCommApplication.getInstance().addNoteString("Trying a bluetooth reset");
 
 			} else {
 				_bluetoothProblem = true;
@@ -336,6 +339,7 @@ public class RobotCommService extends Service {
 				RobotCommApplication.getInstance().setBluetoothConnected(false);
 				RobotCommApplication.getInstance().setBluetoothStatus(_bluetoothStatus);
 				_robotStatus = "Not operating";
+				RobotCommApplication.getInstance().addNoteString("Bluetooth reset failed");
 				_timeBTconnectionLost = System.currentTimeMillis(); // we will set up an alarm to periodically retry
 			}
 		}
@@ -351,22 +355,14 @@ public class RobotCommService extends Service {
 			xmpp.resetConnection();
 		if (connectXMPP()) {
 			Log.d(TAG, "reconnected to XMPP server");
-			_lastXMPPreceivedTime = System.currentTimeMillis(); // give it some
-																// time to
-																// settle down
-																// before
-																// testing it
+			_lastXMPPreceivedTime = System.currentTimeMillis(); // give it some time to settle down before testing it
 			Log.d(TAG, "_lastXMPPreceivedTime set in tryResetXMPP");
 		} else {
 			_XMPPproblem = true;
 			_XMPPstatus = "XMPP lost connection";
 			RobotCommApplication.getInstance().setXMPPstatus(_XMPPstatus);
 			_robotStatus = "Not operating";
-			_timeXMPPconnectionLost = System.currentTimeMillis(); // we will set
-																	// up an
-																	// alarm to
-																	// periodically
-																	// retry
+			_timeXMPPconnectionLost = System.currentTimeMillis(); // we will set up an alarm to periodically retry
 			Log.d(TAG, "resetting XMPP failed");
 		}
 		_commFlagXMPP = false;
@@ -423,17 +419,19 @@ public class RobotCommService extends Service {
 		if (BT.Connect()) { // this blocks until BT connects or times out
 			// might want to run in Async
 			_bluetoothStatus = "Connected";
+			_robotStatus = "Bluetooth OK";
 			RobotCommApplication.getInstance().setBluetoothConnected(true);
 			RobotCommApplication.getInstance().setBluetoothStatus(_bluetoothStatus);
 			_bluetoothProblem = false;
 			updateWidget();
 			Log.d(TAG, "Bluetooth connected");
-			sendDataToArduino("c");	// send a comm cehck so that we get an initial battery percentage
+			sendDataToArduino("c");	// send a comm check so that we get an initial battery percentage
 			//Toast.makeText(this, "Bluetooth connected", Toast.LENGTH_SHORT).show();
 		} else {
 			//Toast.makeText(this, "Bluetooth connection failed, opening RobotCommActivity", Toast.LENGTH_LONG).show();
 			Log.d(TAG, "bluetooth connection failed");
 			_bluetoothStatus = "Connection failed";
+			_robotStatus = "Not operating";
 			RobotCommApplication.getInstance().setBluetoothConnected(false);
 			RobotCommApplication.getInstance().setBluetoothStatus(_bluetoothStatus);
 			updateWidget();
@@ -467,7 +465,8 @@ public class RobotCommService extends Service {
 		Log.d(TAG, "in connectXMPP");
 		xmpp.setCommParameters(host, portNumber, service, userid, password,
 				recipient, recipientForEcho);
-		if (xmpp.Connect()) {
+		if (xmpp.Connect())
+		{
 			_connection = xmpp.getXMPPConnection();
 			//Toast.makeText(this, "XMPP connected", Toast.LENGTH_SHORT).show();
 			Log.d(TAG, "XMPP connected");
@@ -565,6 +564,11 @@ public class RobotCommService extends Service {
 				if (_messageSentToRobot.length() > 80) _messageSentToRobot = _messageSentToRobot.substring(0,80);
 				_messageSentToRobot = robotCommand + " " + _messageSentToRobot;
 				Log.d(TAG, "Message successfully sent to robot: " + robotCommand + " at time = " + System.currentTimeMillis());
+				
+				// if we sent a rotation command, we want to reset the gyros, so we can tell how far we have turned.
+				if (robotCommand.startsWith("h") || robotCommand.startsWith("L") || robotCommand.startsWith("l")
+						|| robotCommand.startsWith("y") || robotCommand.startsWith("R") || robotCommand.startsWith("r"))
+						orientation.resetIntegrals();
 				updateWidget();
 				return true;
 			} else
@@ -875,6 +879,12 @@ public class RobotCommService extends Service {
 		intent.putExtra("C2DM", "    C2DM: " + _C2DMstatus);
 		intent.putExtra("sentToServer", "    Sent To Server: " + _messageSentToServer);
 		intent.putExtra("sentToRobot", "    Sent To Robot: " + _messageSentToRobot);
+        double rotation = 12. * orientation._GyroYintegral;
+        int rotationInt = (int) rotation;
+        //textviewRotation.setText(rotationString);
+		_rotationSinceLastTurnCommandSentString = "Tablet Rotation " + rotationInt;
+		RobotCommApplication.getInstance().addNoteString("Tablet rotation since last turn command sent: " + rotationInt);
+		RobotCommApplication.getInstance().addNoteString("Tablet tilt: " + orientation._yawString);
 		this.startService(intent);
 	}
 
