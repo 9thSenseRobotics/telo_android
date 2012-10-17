@@ -91,7 +91,7 @@ public class XMPP {
 		Log.d(TAG, "Connection created");
 		try {
 			connection.connect();
-			RobotCommApplication.getInstance().addNoteString("connection connected");
+			RobotCommApplication.getInstance().addNoteString("XMPP connection connected");
 			Log.i(TAG, "[SettingsDialog] Connected to " + connection.getHost());
 		} catch (XMPPException ex) {
 			Log.e(TAG, "[SettingsDialog] Failed to connect to "
@@ -104,6 +104,7 @@ public class XMPP {
 		try {
 			connection.login(_userid, _password);
 			Log.i(TAG, "Logged in as " + connection.getUser());
+			RobotCommApplication.getInstance().addNoteString("Logged in as " + connection.getUser());
 
 			// Set the status to available
 			Presence presence = new Presence(Presence.Type.available);
@@ -116,6 +117,7 @@ public class XMPP {
 		} catch (XMPPException ex) {
 			//Toast.makeText(_context, "XMPP Server login failed", Toast.LENGTH_SHORT).show();
 			Log.e(TAG, "[SettingsDialog] Failed to log in as " + _userid);
+			RobotCommApplication.getInstance().addNoteString("Failed to log in as " + _userid);
 			Log.e(TAG, ex.toString());
 			_connection = null;
 			return false;

@@ -144,7 +144,7 @@
 
         <EditText
             android:id="@+id/receivedFromRobot"
-            android:layout_width="199dp"
+            android:layout_width="fill_parent"
             android:layout_height="match_parent"
             android:autoText="false"
             android:capitalize="none"

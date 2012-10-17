@@ -229,7 +229,8 @@ public class RobotCommService extends Service {
 						Log.d(TAG, "_echoReceivedTimeBT updated");
 					}
 				} else {
-					_messageReceivedFromRobot = messageFromRobot;
+					if (_messageReceivedFromRobot.length() > 80) _messageReceivedFromRobot = _messageReceivedFromRobot.substring(0,80);
+					_messageReceivedFromRobot =  messageFromRobot  + " " +  _messageReceivedFromRobot;
 					// check to see if it is a message that
 					if (messageFromRobot.startsWith("m"))
 						messageToServer(messageFromRobot, "m"); // data from robot was sent
@@ -303,11 +304,11 @@ public class RobotCommService extends Service {
 		catch (NumberFormatException nfe) {
 			tempTilt = 0;
 			Log.d(TAG, "in startTilt, orientation._yawString is not an integer, it is: " + orientation._yawString );
-			RobotCommApplication.getInstance().addNoteString("in startTilt, orientation._yawString is not an integer, it is: " + orientation._yawString );
+			//RobotCommApplication.getInstance().addNoteString("in startTilt, orientation._yawString is not an integer, it is: " + orientation._yawString );
 		}
 		int degreesToMove =  tempTilt - _startingTilt;
 		Log.d(TAG, "in startTilt, degreesToMove = " + degreesToMove);
-		RobotCommApplication.getInstance().addNoteString("in startTilt, degreesToMove = " + degreesToMove);
+		//RobotCommApplication.getInstance().addNoteString("in startTilt, degreesToMove = " + degreesToMove);
 		String command = "u";
 		if (degreesToMove < 0)
 		{
@@ -463,6 +464,7 @@ public class RobotCommService extends Service {
 			return false;
 		}
 		Log.d(TAG, "in connectXMPP");
+		RobotCommApplication.getInstance().addNoteString("calling XMPP connect");
 		xmpp.setCommParameters(host, portNumber, service, userid, password,
 				recipient, recipientForEcho);
 		if (xmpp.Connect())
@@ -478,6 +480,7 @@ public class RobotCommService extends Service {
 			//setupPacketListener();
 			PacketFilter filter = new MessageTypeFilter(Message.Type.chat);
 			_connection.addPacketListener(_packetListener, filter);
+			RobotCommApplication.getInstance().addNoteString("XMPP Connect returned true");
 			return true;
 		} else {
 			//Toast.makeText(this, "XMPP connection failed, opening RobotCommActivity", Toast.LENGTH_LONG).show();
@@ -487,6 +490,7 @@ public class RobotCommService extends Service {
 			RobotCommApplication.getInstance().setXMPPconnected(false);
 			updateWidget();
 			_connection = null;
+			RobotCommApplication.getInstance().addNoteString("XMPP Connect returned false");
 			Intent RobotCommIntent = new Intent(this, RobotCommActivity.class);
 			RobotCommIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			startActivity(RobotCommIntent);
@@ -883,8 +887,8 @@ public class RobotCommService extends Service {
         int rotationInt = (int) rotation;
         //textviewRotation.setText(rotationString);
 		_rotationSinceLastTurnCommandSentString = "Tablet Rotation " + rotationInt;
-		RobotCommApplication.getInstance().addNoteString("Tablet rotation since last turn command sent: " + rotationInt);
-		RobotCommApplication.getInstance().addNoteString("Tablet tilt: " + orientation._yawString);
+		//RobotCommApplication.getInstance().addNoteString("Tablet rotation since last turn command sent: " + rotationInt);
+		//RobotCommApplication.getInstance().addNoteString("Tablet tilt: " + orientation._yawString);
 		this.startService(intent);
 	}
 
