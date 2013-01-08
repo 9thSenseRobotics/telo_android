@@ -9,11 +9,11 @@ public class RobotCommApplication extends Application {
 
 	private static RobotCommApplication singleton;
 
-	private static final int NOTE_STRINGS_ARRAY_SIZE = 32;
+	private static final int NOTE_STRINGS_ARRAY_SIZE = 12;
     // global variables
     private boolean _bluetoothConnected, _XMPPconnected, _googleCloudConnected, _displayDetails;
     private String _bluetoothAddress;
-    private String _bluetoothStatus, _XMPPstatus, _googleCloudStatus, _batteryPercent;
+    private String _bluetoothStatus, _XMPPstatus, _googleCloudStatus, _batteryPercent, _rotation;
     private String[] _noteString;
     private int _numNoteStrings;
 
@@ -79,6 +79,16 @@ public class RobotCommApplication extends Application {
     public void setBluetoothStatus(String value)
     {
     	_bluetoothStatus = value;
+    }
+    
+    public String getRotation()
+    {
+    	return _rotation;
+    }
+    
+    public void setRotation(double value)
+    {
+    	_rotation = String.valueOf(value);
     }
 
     public boolean getXMPPconnected()

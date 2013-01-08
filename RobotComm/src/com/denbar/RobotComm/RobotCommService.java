@@ -38,6 +38,7 @@ import android.content.res.Resources;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.StrictMode;
 import android.util.Log;
 
 //Service that supports the 9th Sense robots
@@ -63,7 +64,7 @@ public class RobotCommService extends Service {
 	public long _latencyXMPP = 0, _echoReceivedTimeXMPP, _echoSentTimeServer;
 	public long _latencyC2DM = 0, _echoReceivedTimeC2DM;
 	public long _latencyBT = 0, _echoReceviedTimeBT, _echoSentTimeBT;
-	private boolean _sleeping = false;
+	private boolean _sleeping = false, _turningNow = false;
 	private long _timeBTconnectionLost, _timeXMPPconnectionLost, _timeC2DMconnectionLost, _lastTimeValue = 0;
 	private long _lastArrivalTime = 0, _lastPacketSentTime;
 	private boolean _echoReceivedBT = false, _echoReceivedXMPP = false,	_echoReceivedC2DM = false;
@@ -82,6 +83,10 @@ public class RobotCommService extends Service {
 		super.onCreate();
 		Log.d(TAG, "in onCreate");
 		//Toast.makeText(this, "RobotCommService created", Toast.LENGTH_SHORT).show();
+		
+		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+	    StrictMode.setThreadPolicy(policy);
+		
 		_context = this;
 		_robotStatus = "Starting service ";
 
@@ -228,7 +233,27 @@ public class RobotCommService extends Service {
 						_echoReceivedBT = true;				
 						Log.d(TAG, "_echoReceivedTimeBT updated");
 					}
-				} else {
+				} 
+				else if (_turningNow && ((messageFromRobot.startsWith("ex") || (messageFromRobot.startsWith("Moving")))))
+				{
+					// we are either turning or just finished a turn, check how far we turned.
+					double rotation = 12. * orientation._GyroYintegral;
+					//RobotCommApplication.getInstance().setRotation(rotation);
+					RobotCommApplication.getInstance().addNoteString("Currently turn = " + String.valueOf((int) rotation) + " degrees");
+					if (messageFromRobot.startsWith("ex"))
+					{
+						_turningNow = false;
+						RobotCommApplication.getInstance().addNoteString("Ended turn at " + String.valueOf((int) rotation) + " degrees");
+					}
+					else if (Math.abs(rotation) > 20) // turned too far
+					{
+						sendDataToArduino("x");
+						_turningNow = false;
+						RobotCommApplication.getInstance().addNoteString("Auto stopped turn at " + String.valueOf((int) rotation) + " degrees");
+					}
+					
+				}
+				else {
 					if (_messageReceivedFromRobot.length() > 80) _messageReceivedFromRobot = _messageReceivedFromRobot.substring(0,80);
 					_messageReceivedFromRobot =  messageFromRobot  + " " +  _messageReceivedFromRobot;
 					// check to see if it is a message that
@@ -572,7 +597,11 @@ public class RobotCommService extends Service {
 				// if we sent a rotation command, we want to reset the gyros, so we can tell how far we have turned.
 				if (robotCommand.startsWith("h") || robotCommand.startsWith("L") || robotCommand.startsWith("l")
 						|| robotCommand.startsWith("y") || robotCommand.startsWith("R") || robotCommand.startsWith("r"))
+				{
 						orientation.resetIntegrals();
+						RobotCommApplication.getInstance().addNoteString("Turn command sent, orientation reset");
+						_turningNow = true;
+				}
 				updateWidget();
 				return true;
 			} else

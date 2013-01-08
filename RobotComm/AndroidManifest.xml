@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.denbar.RobotComm"
-    android:versionCode="9"
-    android:versionName="1.2" >
+    android:versionCode="10"
+    android:versionName="1.21" >
     <uses-sdk android:minSdkVersion="15" android:targetSdkVersion="15" />
 
     
@@ -71,7 +71,9 @@
 
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/widget_info" />
+                android:resource="@xml/widget_info"
+            />
+            
         </receiver>
 
         <service android:name=".UpdateWidgetService" >
