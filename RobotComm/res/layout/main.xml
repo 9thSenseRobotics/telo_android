@@ -50,11 +50,10 @@
             android:id="@+id/XMPPstatus"
             android:layout_width="199dp"
             android:layout_height="match_parent"
-            android:autoText="false"
-            android:capitalize="none"
             android:minWidth="150dp"
             android:scrollHorizontally="true"
             android:singleLine="true"
+            android:inputType="text"
             android:textSize="11sp" />
     </LinearLayout>
 

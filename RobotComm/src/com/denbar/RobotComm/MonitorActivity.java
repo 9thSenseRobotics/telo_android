@@ -21,13 +21,13 @@ package com.denbar.RobotComm;
 import java.util.Timer;
 import java.util.TimerTask;
 
+//import android.R;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
@@ -145,6 +145,18 @@ public class MonitorActivity extends Activity {
 			}
 		});
 
+		// Set a button listener to switch to local driving UI
+		Button btnDriving = (Button) this.findViewById(R.id.Drive);
+		btnDriving.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View view) {
+				RobotCommApplication.getInstance().setDisplayDetails(false);
+				Intent startIntent = new Intent(_context,
+						com.denbar.RobotComm.localDriving.class);
+				startActivity(startIntent);
+			}
+		});		
+		
+		
 	} // ends on Create
 
 	@Override

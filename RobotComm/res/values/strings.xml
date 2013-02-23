@@ -16,8 +16,13 @@
     <string name="preferencesStatus">not saved yet</string>
     <string name="quit">Quit</string>
     <string name="help">Help</string>
-    <string name="version">  RobotComm v1.21</string>
+    <string name="version">  RobotComm v1.23</string>
     <string name="startingTilt">180</string>
+    
+    <string name="default_speed">220</string>
+    <string name="accleration">3</string>
+    <string name="degrees">8</string>
+
 
     <color name="background_color">#000000</color>
     <color name="axes_color">#FFFFFF</color>

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.denbar.RobotComm"
-    android:versionCode="10"
-    android:versionName="1.21" >
+    android:versionCode="11"
+    android:versionName="1.23" >
     <uses-sdk android:minSdkVersion="15" android:targetSdkVersion="15" />
 
     
@@ -20,7 +20,8 @@
         android:label="@string/app_name" >
         <activity
             android:label="@string/app_name"
-            android:name=".RobotCommActivity" >
+            android:name=".RobotCommActivity"
+            android:windowSoftInputMode="stateHidden" >
             <intent-filter >
                 <action android:name="android.intent.action.MAIN" />
 
@@ -29,13 +30,19 @@
         </activity>
         <activity
             android:label="RobotComm MonitorActivity"
-            android:name=".MonitorActivity" />
+            android:name=".MonitorActivity"
+            android:windowSoftInputMode="stateHidden" />
+         <activity
+            android:label="RobotComm Local Driving"
+            android:name=".localDriving"
+            android:windowSoftInputMode="stateHidden" />
         <activity
             android:label="RobotComm Credentials"
             android:name=".credentialsActivity" />
         <activity
             android:label="RobotComm Help"
-            android:name=".Help" />
+            android:name=".Help"
+            android:windowSoftInputMode="stateHidden" />
 
         <service
             android:enabled="true"

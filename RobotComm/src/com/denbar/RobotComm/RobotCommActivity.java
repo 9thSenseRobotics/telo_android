@@ -222,7 +222,7 @@ public class RobotCommActivity extends Activity {
 				startActivity(startIntent);
 			}
 		});
-
+		
 	} // ends on Create
 
 	@Override

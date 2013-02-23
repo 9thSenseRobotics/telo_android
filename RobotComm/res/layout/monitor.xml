@@ -150,7 +150,16 @@
             android:layout_width="100dp"
             android:layout_height="60dp"
             android:text="Connect" >
-        </Button>       
+        </Button>
         
     </LinearLayout>
+        
+    <Button
+        android:id="@+id/Drive"
+        android:layout_width="100dp"
+        android:layout_height="60dp"
+        android:text="Local Driving" >
+    </Button>      
+        
+
 </LinearLayout>

@@ -372,7 +372,7 @@ public class arduinoBT {
 		String msgTest = msg + "#";
 		try {
 			byte[] byteString = (msgTest + " ").getBytes();
-			byteString[byteString.length - 1] = 0;
+			byteString[byteString.length - 1] = 0;				//  *********** might not need this *************
 			_outputStream.write(byteString);
 			Log.d(TAG, "sendMessage to arduino successfully: " + msgTest + " at time " + System.currentTimeMillis());
 		} catch (IOException e) {

@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:gravity="center"  >
+    
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="120dp"
+        android:orientation="horizontal"
+        android:gravity="center"  > 
+          
+    	<ImageButton 
+        	android:id="@+id/move_forward"
+        	android:layout_width="wrap_content"
+        	android:layout_height="wrap_content"
+        	android:contentDescription="move forward"
+        	android:src="@drawable/green_up_arrow_128" />
+	</LinearLayout>
+    	
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="120dp"
+        android:orientation="horizontal"
+        android:gravity="center"  >
+	    
+	    <ImageButton 
+	        android:id="@+id/turn_left"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:contentDescription="move left"
+	        android:src="@drawable/green_left_arrow_128" />
+	    
+	    <ImageButton 
+	        android:id="@+id/stop"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:contentDescription="stop"
+	        android:src="@drawable/green_stop_square_128" />
+	    
+	    <ImageButton 
+	        android:id="@+id/turn_right"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:contentDescription="move right"
+	        android:src="@drawable/green_right_arrow_128" />
+	    
+	</LinearLayout>
+ 
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="120dp"
+        android:orientation="horizontal"
+        android:gravity="center"  >
+	        
+	    <ImageButton 
+	        android:id="@+id/tilt_up"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:contentDescription="tilt up"
+	        android:src="@drawable/tilt_up_red_arrow_128" />   
+	    
+	    <ImageButton 
+	        android:id="@+id/move_backward"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:contentDescription="move backward"
+	        android:src="@drawable/green_down_arrow_128" />
+	    
+	    <ImageButton 
+	        android:id="@+id/tilt_down"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:contentDescription="tilt up"
+	        android:src="@drawable/tilt_down_red_arrow_128" />  
+	        
+	</LinearLayout>
+	    
+	<LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="30dp"
+        android:orientation="horizontal"
+        android:gravity="center"  >
+	    
+	    <TextView
+	        android:layout_width="wrap_content"
+	        android:layout_height="30dp"
+	        android:minWidth="110dp"
+	        android:text="Tilt tablet up" />	
+	    
+	    <TextView
+	        android:layout_width="wrap_content"
+	        android:layout_height="30dp"
+	        android:minWidth="110dp"
+	        android:text="Move Robot" />
+	
+	    <TextView
+	        android:layout_width="wrap_content"
+	        android:layout_height="30dp"
+	        android:minWidth="110dp"
+	        android:text="Tilt tablet down" />
+	    
+	</LinearLayout>
+	
+	<LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="120dp"
+        android:orientation="horizontal"
+        android:gravity="center"  >	
+        
+		<LinearLayout
+	        android:layout_width="wrap_content"
+	        android:layout_height="100dp"
+	        android:orientation="vertical" >	    
+
+			<LinearLayout
+		        android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:orientation="horizontal" >	
+		        	        
+			        <TextView
+			            android:layout_width="wrap_content"
+			            android:layout_height="match_parent"
+			            android:gravity="center"
+			            android:text="speed (0-255):" />
+
+			        <EditText
+			            android:id="@+id/Speed"
+			            android:layout_width="wrap_content"
+			            android:layout_height="match_parent"
+			            android:inputType="text"
+			            android:text="@string/default_speed" >
+
+			            <requestFocus />
+			        </EditText>
+
+			</LinearLayout>
+			
+			<LinearLayout
+		        android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:orientation="horizontal" >
+			        <TextView
+			            android:layout_width="wrap_content"
+			            android:layout_height="match_parent"
+			            android:gravity="center"
+			             android:text="_"/>
+			</LinearLayout>
+			
+			<!-- 
+			<LinearLayout
+		        android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:orientation="horizontal" >	
+		        		
+			        <TextView
+			            android:layout_width="wrap_content"
+			            android:layout_height="match_parent"
+			            android:gravity="center"
+			            android:text="acceleration (0-5):" />
+			
+			        <EditText
+			            android:id="@+id/Acceleration"
+			            android:layout_width="wrap_content"
+			            android:layout_height="match_parent"
+			            android:text="@string/acceleration" />
+			</LinearLayout>
+			 -->
+			          
+			<LinearLayout
+		        android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:orientation="horizontal" >		            
+			        <TextView
+			            android:layout_width="wrap_content"
+			            android:layout_height="match_parent"
+			            android:gravity="center"
+			            android:text="degrees (1-180):" />
+			
+			        <EditText
+			            android:id="@+id/Degrees"
+			            android:layout_width="wrap_content"
+			            android:layout_height="match_parent"
+			            android:inputType="text"
+			            android:text="@string/degrees" />           
+			        
+				</LinearLayout>	
+		</LinearLayout>
+		
+	<View
+	     android:layout_width="40dp"
+	     android:layout_height="fill_parent"
+	     />
+	    
+    <Button
+        android:id="@+id/Return"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:text="    Return    " />
+
+    </LinearLayout>	
+    
+</LinearLayout>
+

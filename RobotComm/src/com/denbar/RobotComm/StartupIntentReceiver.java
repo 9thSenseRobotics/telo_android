@@ -57,6 +57,6 @@ public class StartupIntentReceiver extends BroadcastReceiver {
 			Log.d(TAG, "bootup complete, sending intent to RobotCommService to connect");
 		}
 		// start up the service
-		context.startService(serviceIntent);	// this causes the app to crash on power up
+		context.startService(serviceIntent);
 	}
 }

@@ -172,6 +172,10 @@ public class RobotCommService extends Service {
 			
 			// from C2DM server
 			String messageFromC2DM = intent.getStringExtra("C2DMmessage");
+			
+			// frpm localDriving
+			// sending a command to the robot
+			String messageToRobot = intent.getStringExtra("messageToRobot");
 
 			// from the arduino, via arduinoBT, could be just an echo, could be
 			// data
@@ -204,6 +208,14 @@ public class RobotCommService extends Service {
 				processMessageFromC2DMServer(messageFromC2DM);
 				Log.d(TAG, "C2DM message received: " + messageFromC2DM);
 			}
+			
+			else if (messageToRobot != null)
+			{
+				sendDataToArduino(messageToRobot);
+				Log.d(TAG, "localDriving command received: " + messageToRobot);
+			}
+			
+			
 			// received a message from the arduino via the bluetooth, intent
 			// sent from arduinoBT
 			else if (messageFromRobot != null) {
@@ -1194,20 +1206,20 @@ public class RobotCommService extends Service {
 		Log.d(TAG, "in processMessageFromC2DMServer " + messageFromServer);
 		//_C2DMstatus = "Connected";
 		_messageReceivedFromServer = messageFromServer;
-		String robotCommand = null, timeStamp = null;
+		String robotCommand = "", timeStamp = "";
 		if (messageFromServer.contains("<"))
 		{
 			MessageToRobot serverMessage = new MessageToRobot(messageFromServer);
 			robotCommand = serverMessage.commandChar + serverMessage.commandArguments;
 			timeStamp = serverMessage.timeStamp;	// note that timeStamp might be null here, careful
-			if (timeStamp != null) Log.d(TAG, "in processMessageFromC2DMServer, timeStamp: " + timeStamp);
+			if (timeStamp.length() != 0) Log.d(TAG, "in processMessageFromC2DMServer, timeStamp: " + timeStamp);
 		}
 		else
 		{
 			Log.d(TAG, "in processMessageFromC2DMServer, message is not in valid format: " + messageFromServer);
 			return;
 		}
-		if (robotCommand == null)
+		if (robotCommand.length() == 0)
 		{
 			Log.d(TAG, "in processMessageFromC2DMServer, robotCommand is null ");
 			return;
